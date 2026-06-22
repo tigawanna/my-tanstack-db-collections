@@ -5,7 +5,7 @@ type User = {
   createdAt: number;
 };
 
-type Todo = {
+export type Todo = {
   id: string;
   userId: string;
   title: string;
@@ -43,7 +43,7 @@ const platform = await createBrowserPlatform(
   { databaseName: "my-app.sqlite" },
 );
 
-const db = await createEventSourcedDB({
+export const db = await createEventSourcedDB({
   driver: platform.driver,
   persistence: platform.persistence,
   createCollection,
