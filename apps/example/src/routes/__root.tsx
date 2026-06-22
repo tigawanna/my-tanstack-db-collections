@@ -1,34 +1,15 @@
-import {
-  HeadContent,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  createRootRoute,
-} from "@tanstack/react-router";
-import "../styles.css";
+import * as React from "react";
+import { Outlet, createRootRoute } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Event Store Explorer — Notes & Sync" },
-    ],
-  }),
-  component: RootDocument,
+  component: RootComponent,
 });
 
-function RootDocument() {
+function RootComponent() {
   return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body className="bg-gray-950 text-gray-100 antialiased">
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
+    <React.Fragment>
+      <div>Hello "__root"!</div>
+      <Outlet />
+    </React.Fragment>
   );
 }

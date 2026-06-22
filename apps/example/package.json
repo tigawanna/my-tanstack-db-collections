@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp dev --port 3002",
+    "dev": "vp dev --port 3091",
     "build": "vp build",
     "preview": "vp preview",
     "test": "vp test run",
