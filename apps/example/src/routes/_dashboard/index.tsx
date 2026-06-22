@@ -5,5 +5,9 @@ export const Route = createFileRoute("/_dashboard/")({
 });
 
 function Home() {
-  return <div className="min-h-full">index</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <h1 className="text-4xl font-bold">Hello World</h1>
+    </div>
+  );
 }
