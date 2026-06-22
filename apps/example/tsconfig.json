@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@repo/typescript-config/tanstack-start.json",
+  "include": ["app/**/*", "app.config.ts", "drizzle.config.ts"],
+  "exclude": ["node_modules", ".vinxi", "dist"]
+}
