@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/breadcrumb";
 interface TSRBreadCrumbsProps {}
 
-export function TSRBreadCrumbs(_props: TSRBreadCrumbsProps) {
+export function TSRBreadCrumbs({}: TSRBreadCrumbsProps) {
   const { breadcrumb_routes } = useTSRBreadCrumbs();
   if (breadcrumb_routes.length < 2) return null;
   return (

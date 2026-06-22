@@ -29,7 +29,7 @@ const isBrowser = typeof window !== "undefined";
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "event-sourced-db.theme",
+  storageKey = "dishi.theme",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => (isBrowser ? (localStorage.getItem(storageKey) as Theme) : defaultTheme) || defaultTheme,

@@ -4,27 +4,37 @@ import type {
   PushConfirmation,
   ServerEvent,
 } from "@tanstack-db-collections/event-sourced";
-import { getSyncTursoClient, initSyncSchema } from "./turso";
+import { asc, eq, gt } from "drizzle-orm";
+import { getSyncDb, withSyncSchema } from "./db";
+import { syncEvents } from "./schema";
 
-type SyncEventRow = {
-  global_seq: number;
-  event_id: string;
-  collection_id: string;
-  type: string;
-  key: string;
-  payload: string;
-  client_timestamp: number;
-};
+const PULL_LIMIT = 500;
 
-let schemaReady: Promise<void> | null = null;
-
-async function ensureSchema(): Promise<void> {
-  if (!schemaReady) {
-    schemaReady = initSyncSchema();
-  }
-  await schemaReady;
-}
-
+/**
+ * Persists outbound client events to the remote sync store and returns server-assigned sequence numbers.
+ *
+ * Used by `POST /api/sync/events` in `hono-app.ts`. Each event is inserted into
+ * `sync_events` via Drizzle. Duplicate `eventId` values are ignored (idempotent retries)
+ * and the existing `globalSeq` is returned instead.
+ *
+ * @param events - Client-originated mutation events from the event-sourced collection sync transport
+ * @returns Confirmations pairing each `eventId` with its assigned or existing `globalSeq`
+ *
+ * @example
+ * ```ts
+ * const confirmed = await remotePushEvents([
+ *   {
+ *     eventId: "01H...",
+ *     collectionId: "notes",
+ *     type: "insert",
+ *     key: "note-1",
+ *     payload: { title: "Hello" },
+ *     timestamp: Date.now(),
+ *   },
+ * ]);
+ * // [{ eventId: "01H...", globalSeq: 42 }]
+ * ```
+ */
 export async function remotePushEvents(
   events: ReadonlyArray<OutboundEvent>,
 ): Promise<PushConfirmation[]> {
@@ -32,76 +42,98 @@ export async function remotePushEvents(
     return [];
   }
 
-  await ensureSchema();
-  const db = getSyncTursoClient();
-  const confirmed: PushConfirmation[] = [];
+  return withSyncSchema(async () => {
+    const db = getSyncDb();
+    const confirmed: PushConfirmation[] = [];
 
-  for (const event of events) {
-    const existing = await db.execute({
-      sql: `SELECT global_seq FROM sync_events WHERE event_id = ?`,
-      args: [event.eventId],
-    });
+    for (const event of events) {
+      const existing = await db
+        .select({ globalSeq: syncEvents.globalSeq })
+        .from(syncEvents)
+        .where(eq(syncEvents.eventId, event.eventId))
+        .limit(1);
 
-    if (existing.rows.length > 0) {
-      const row = existing.rows[0] as unknown as { global_seq: number };
-      confirmed.push({ eventId: event.eventId, globalSeq: Number(row.global_seq) });
-      continue;
+      if (existing.length > 0) {
+        confirmed.push({
+          eventId: event.eventId,
+          globalSeq: existing[0]!.globalSeq,
+        });
+        continue;
+      }
+
+      const inserted = await db
+        .insert(syncEvents)
+        .values({
+          eventId: event.eventId,
+          collectionId: event.collectionId,
+          type: event.type,
+          key: String(event.key),
+          payload: JSON.stringify(event.payload),
+          clientTimestamp: event.timestamp,
+        })
+        .returning({ globalSeq: syncEvents.globalSeq });
+
+      confirmed.push({
+        eventId: event.eventId,
+        globalSeq: inserted[0]!.globalSeq,
+      });
     }
 
-    const inserted = await db.execute({
-      sql: `INSERT INTO sync_events (event_id, collection_id, type, key, payload, client_timestamp)
-            VALUES (?, ?, ?, ?, ?, ?)
-            RETURNING global_seq`,
-      args: [
-        event.eventId,
-        event.collectionId,
-        event.type,
-        String(event.key),
-        JSON.stringify(event.payload),
-        event.timestamp,
-      ],
-    });
-
-    const globalSeq = Number((inserted.rows[0] as unknown as { global_seq: number }).global_seq);
-    confirmed.push({ eventId: event.eventId, globalSeq });
-  }
-
-  return confirmed;
+    return confirmed;
+  });
 }
 
+/**
+ * Fetches server events newer than a global sequence cursor for client replay.
+ *
+ * Used by `GET /api/sync/events?since=<n>` in `hono-app.ts`. Returns up to 500 rows
+ * ordered by `globalSeq`, with `hasMore` set when the batch is full so the client can
+ * page forward using the returned `cursor`.
+ *
+ * @param since - Last seen `globalSeq`; only events with a higher sequence are returned
+ * @returns Pulled events, the latest cursor, and whether more pages may exist
+ *
+ * @example
+ * ```ts
+ * const { events, cursor, hasMore } = await remotePullEvents(0);
+ *
+ * for (const event of events) {
+ *   applyServerEvent(event);
+ * }
+ *
+ * if (hasMore) {
+ *   await remotePullEvents(Number(cursor));
+ * }
+ * ```
+ */
 export async function remotePullEvents(since: number): Promise<PullResponse> {
-  await ensureSchema();
-  const db = getSyncTursoClient();
-  const limit = 500;
+  return withSyncSchema(async () => {
+    const db = getSyncDb();
 
-  const result = await db.execute({
-    sql: `SELECT global_seq, event_id, collection_id, type, key, payload, client_timestamp
-          FROM sync_events
-          WHERE global_seq > ?
-          ORDER BY global_seq ASC
-          LIMIT ?`,
-    args: [since, limit],
-  });
+    const rows = await db
+      .select()
+      .from(syncEvents)
+      .where(gt(syncEvents.globalSeq, since))
+      .orderBy(asc(syncEvents.globalSeq))
+      .limit(PULL_LIMIT);
 
-  const events: ServerEvent[] = result.rows.map((row) => {
-    const typed = row as unknown as SyncEventRow;
+    const events: ServerEvent[] = rows.map((row) => ({
+      globalSeq: row.globalSeq,
+      eventId: row.eventId,
+      collectionId: row.collectionId,
+      type: row.type as ServerEvent["type"],
+      key: row.key,
+      payload: JSON.parse(row.payload) as Record<string, unknown>,
+      timestamp: row.clientTimestamp,
+      cursor: String(row.globalSeq),
+    }));
+
+    const cursor = events.length > 0 ? events[events.length - 1]!.cursor : String(since);
+
     return {
-      globalSeq: Number(typed.global_seq),
-      eventId: String(typed.event_id),
-      collectionId: String(typed.collection_id),
-      type: typed.type as ServerEvent["type"],
-      key: String(typed.key),
-      payload: JSON.parse(String(typed.payload)) as Record<string, unknown>,
-      timestamp: Number(typed.client_timestamp),
-      cursor: String(typed.global_seq),
+      events,
+      cursor,
+      hasMore: events.length === PULL_LIMIT,
     };
   });
-
-  const cursor = events.length > 0 ? events[events.length - 1]!.cursor : String(since);
-
-  return {
-    events,
-    cursor,
-    hasMore: events.length === limit,
-  };
 }
