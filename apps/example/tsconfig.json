@@ -1,6 +1,23 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "@repo/typescript-config/tanstack-start.json",
-  "include": ["app/**/*", "app.config.ts", "drizzle.config.ts"],
-  "exclude": ["node_modules", ".vinxi", "dist"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUncheckedSideEffectImports": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

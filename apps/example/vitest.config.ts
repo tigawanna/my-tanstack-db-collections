@@ -1,0 +1,19 @@
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@tanstack-db-collections/event-sourced": fileURLToPath(
+        new URL("../../packages/event-sourced-collection/dist/index.mjs", import.meta.url),
+      ),
+    },
+  },
+  test: {
+    environment: "node",
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.output/**"],
+    globals: false,
+    restoreMocks: true,
+  },
+});

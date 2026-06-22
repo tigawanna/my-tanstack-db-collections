@@ -4,21 +4,43 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "test": "turbo run test",
+    "lint": "vp lint .",
+    "lint:fix": "vp lint --fix .",
+    "format": "vp fmt .",
+    "format:fix": "vp fmt .",
+    "check-types": "turbo run check-types",
+    "quality": "turbo run //#lint //#format",
+    "quality:fix": "turbo run //#lint:fix //#format:fix",
+    "prepare": "vp config",
+    "publish:event-sourced": "pnpm --filter @tanstack-db-collections/event-sourced publish --access public",
+    "pack:event-sourced": "pnpm --filter @tanstack-db-collections/event-sourced exec npm pack --dry-run"
   },
   "devDependencies": {
-    "prettier": "^3.7.4",
+    "@typescript/native-preview": "catalog:",
     "turbo": "^2.9.6",
-    "typescript": "5.9.2"
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
   },
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "npm@11.12.1",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+  "packageManager": "pnpm@10.27.0",
+  "pnpm": {
+    "overrides": {
+      "@tanstack/react-router": "1.169.2",
+      "@tanstack/react-start": "1.167.65",
+      "@tanstack/router-core": "1.169.2",
+      "@types/react": "^19.2.14",
+      "@types/react-dom": "^19.2.3",
+      "esbuild": "^0.27.7",
+      "postcss": "^8.5.10"
+    },
+    "onlyBuiltDependencies": [
+      "core-js",
+      "esbuild",
+      "sharp",
+      "workerd"
+    ]
+  }
 }
