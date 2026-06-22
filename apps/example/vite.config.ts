@@ -19,5 +19,14 @@ export default defineConfig({
   ssr: {
     noExternal: ["@tanstack-db-collections/event-sourced"],
   },
-  plugins: [nitro(), tailwindcss(), tanstackStart(), viteReact()],
+  plugins: [
+    nitro(),
+    tailwindcss(),
+    tanstackStart({
+      router: {
+        routeToken: "layout",
+      },
+    }),
+    viteReact(),
+  ],
 });

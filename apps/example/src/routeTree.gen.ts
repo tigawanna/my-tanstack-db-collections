@@ -9,13 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardLayoutRouteImport } from './routes/_dashboard/layout'
+import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiSyncSplatRouteImport } from './routes/api/sync/$'
 
-const IndexRoute = IndexRouteImport.update({
+const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
+  id: '/_dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => DashboardLayoutRoute,
 } as any)
 const ApiSyncSplatRoute = ApiSyncSplatRouteImport.update({
   id: '/api/sync/$',
@@ -24,16 +29,17 @@ const ApiSyncSplatRoute = ApiSyncSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof DashboardIndexRoute
   '/api/sync/$': typeof ApiSyncSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof DashboardIndexRoute
   '/api/sync/$': typeof ApiSyncSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_dashboard': typeof DashboardLayoutRouteWithChildren
+  '/_dashboard/': typeof DashboardIndexRoute
   '/api/sync/$': typeof ApiSyncSplatRoute
 }
 export interface FileRouteTypes {
@@ -41,22 +47,29 @@ export interface FileRouteTypes {
   fullPaths: '/' | '/api/sync/$'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/api/sync/$'
-  id: '__root__' | '/' | '/api/sync/$'
+  id: '__root__' | '/_dashboard' | '/_dashboard/' | '/api/sync/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  DashboardLayoutRoute: typeof DashboardLayoutRouteWithChildren
   ApiSyncSplatRoute: typeof ApiSyncSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_dashboard': {
+      id: '/_dashboard'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof DashboardLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_dashboard/': {
+      id: '/_dashboard/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
     }
     '/api/sync/$': {
       id: '/api/sync/$'
@@ -68,8 +81,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DashboardLayoutRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardLayoutRouteWithChildren = DashboardLayoutRoute._addFileChildren(
+  DashboardLayoutRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  DashboardLayoutRoute: DashboardLayoutRouteWithChildren,
   ApiSyncSplatRoute: ApiSyncSplatRoute,
 }
 export const routeTree = rootRouteImport
