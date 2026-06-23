@@ -59,7 +59,7 @@ async function initDb(): Promise<AppDb> {
     persistence: platform.persistence,
     createCollection,
     persistedCollectionOptions,
-    debug: true,
+    debug: import.meta.env.DEV,
     sync: {
       push: "/api/sync/events",
       pull: "/api/sync/events",
