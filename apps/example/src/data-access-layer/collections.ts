@@ -1,4 +1,9 @@
-import type { EventSourcedDB } from "@tanstack-db-collections/event-sourced";
+import type {
+  EventSourcedDB,
+  OutboundEvent,
+  PullResponse,
+  PushResponse,
+} from "@tanstack-db-collections/event-sourced";
 
 export type User = {
   id: string;
@@ -35,6 +40,38 @@ let initPromise: Promise<AppDb> | null = null;
 
 const getAccessToken = (): string => localStorage.getItem("accessToken") ?? "";
 
+async function pushEvents(events: ReadonlyArray<OutboundEvent>): Promise<PushResponse> {
+  const response = await fetch("/api/sync/events", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAccessToken()}`,
+    },
+    body: JSON.stringify(events),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Push events failed with HTTP ${response.status}`);
+  }
+
+  return response.json() as Promise<PushResponse>;
+}
+
+async function pullEvents({ since }: { since: number }): Promise<PullResponse> {
+  const response = await fetch(`/api/sync/events?since=${encodeURIComponent(String(since))}`, {
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${getAccessToken()}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Pull events failed with HTTP ${response.status}`);
+  }
+
+  return response.json() as Promise<PullResponse>;
+}
+
 async function initDb(): Promise<AppDb> {
   const { createCollection } = await import("@tanstack/react-db");
   const {
@@ -43,8 +80,8 @@ async function initDb(): Promise<AppDb> {
     openBrowserWASQLiteOPFSDatabase,
     persistedCollectionOptions,
   } = await import("@tanstack/browser-db-sqlite-persistence");
-  const { createBrowserPlatform, createEventSourcedDB } =
-    await import("@tanstack-db-collections/event-sourced");
+  const { createEventSourcedDB } = await import("@tanstack-db-collections/event-sourced");
+  const { createBrowserPlatform } = await import("@tanstack-db-collections/event-sourced/browser");
 
   const platform = await createBrowserPlatform(
     {
@@ -61,9 +98,8 @@ async function initDb(): Promise<AppDb> {
     persistedCollectionOptions,
     debug: import.meta.env.DEV,
     sync: {
-      push: "/api/sync/events",
-      pull: "/api/sync/events",
-      headers: () => ({ Authorization: `Bearer ${getAccessToken()}` }),
+      pushEvents,
+      pullEvents,
     },
     collections: {
       users: { getKey: (user: User) => user.id },

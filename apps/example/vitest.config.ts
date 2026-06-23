@@ -8,6 +8,9 @@ export default defineConfig({
       "@tanstack-db-collections/event-sourced": fileURLToPath(
         new URL("../../packages/event-sourced-collection/dist/index.mjs", import.meta.url),
       ),
+      "@tanstack-db-collections/event-sourced/browser": fileURLToPath(
+        new URL("../../packages/event-sourced-collection/dist/browser.mjs", import.meta.url),
+      ),
     },
   },
   test: {
