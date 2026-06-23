@@ -35,4 +35,7 @@ export type EvlogLogsResponse = {
   date: string;
   files: string[];
   events: EvlogWideEvent[];
+  total: number;
+  page: number;
+  pageSize: number;
 };

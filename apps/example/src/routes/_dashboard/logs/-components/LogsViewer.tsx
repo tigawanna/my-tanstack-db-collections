@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { RefreshCw, ScrollText } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Sheet,
   SheetContent,
@@ -26,7 +33,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { EvlogLogsResponse, EvlogWideEvent } from "@/types/evlog";
+import { useEvlogLogsPage } from "@/hooks/logs/use-evlog-logs-page";
+import type { EvlogWideEvent } from "@/types/evlog";
 
 function formatTime(timestamp?: string) {
   if (!timestamp) return "—";
@@ -62,54 +70,26 @@ function statusVariant(status?: number) {
 }
 
 export function LogsViewer() {
-  const [dates, setDates] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState("");
-  const [data, setData] = useState<EvlogLogsResponse | null>(null);
+  const {
+    dates,
+    activeDate,
+    selectDate,
+    events,
+    total,
+    page,
+    totalPages,
+    range,
+    canPrevious,
+    canNext,
+    setPage,
+    isLoading,
+    isFetching,
+    error,
+    refresh,
+  } = useEvlogLogsPage();
+
   const [selectedEvent, setSelectedEvent] = useState<EvlogWideEvent | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadLogs = useCallback(async (date?: string) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const query = date ? `?date=${encodeURIComponent(date)}` : "";
-      const response = await fetch(`/api/logs/${query}`);
-
-      if (!response.ok) {
-        const body = (await response.json()) as { message?: string };
-        throw new Error(body.message ?? `Failed to load logs (${response.status})`);
-      }
-
-      const payload = (await response.json()) as EvlogLogsResponse;
-      setData(payload);
-      setSelectedDate(payload.date);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load logs");
-      setData(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const response = await fetch("/api/logs/?listDates=1");
-        if (response.ok) {
-          const payload = (await response.json()) as { dates: string[] };
-          setDates(payload.dates);
-          await loadLogs(payload.dates[0]);
-          return;
-        }
-      } catch {
-        // fall through to default load
-      }
-
-      await loadLogs();
-    })();
-  }, [loadLogs]);
+  const errorMessage = error instanceof Error ? error.message : error ? String(error) : null;
 
   return (
     <div className="bg-muted/30 mx-auto flex min-h-full w-full max-w-6xl flex-col gap-6 rounded-xl p-4 sm:p-6">
@@ -125,12 +105,8 @@ export function LogsViewer() {
           {dates.length > 0 ? (
             <select
               className="bg-background border-input h-9 rounded-md border px-3 text-sm"
-              value={selectedDate}
-              onChange={(event) => {
-                const date = event.target.value;
-                setSelectedDate(date);
-                void loadLogs(date);
-              }}
+              value={activeDate}
+              onChange={(event) => selectDate(event.target.value)}
             >
               {dates.map((date) => (
                 <option key={date} value={date}>
@@ -139,8 +115,8 @@ export function LogsViewer() {
               ))}
             </select>
           ) : null}
-          <Button variant="outline" size="sm" onClick={() => void loadLogs(selectedDate)}>
-            <RefreshCw />
+          <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refresh()}>
+            <RefreshCw className={isFetching ? "animate-spin" : undefined} />
             Refresh
           </Button>
         </div>
@@ -172,19 +148,19 @@ export function LogsViewer() {
         </div>
       ) : null}
 
-      {!isLoading && error ? (
+      {!isLoading && errorMessage ? (
         <Empty className="border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <ScrollText />
             </EmptyMedia>
             <EmptyTitle>Could not load logs</EmptyTitle>
-            <EmptyDescription>{error}</EmptyDescription>
+            <EmptyDescription>{errorMessage}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : null}
 
-      {!isLoading && !error && data && data.events.length === 0 ? (
+      {!isLoading && !errorMessage && total === 0 ? (
         <Empty className="border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -199,46 +175,83 @@ export function LogsViewer() {
         </Empty>
       ) : null}
 
-      {!isLoading && !error && data && data.events.length > 0 ? (
-        <div className="bg-card rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-4">Time</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Request</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead className="pr-4">Sync</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.events.map((event) => (
-                <TableRow
-                  key={`${event.requestId ?? event.timestamp}-${event.path}-${event.method}`}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedEvent(event)}
-                >
-                  <TableCell className="text-muted-foreground pl-4 whitespace-nowrap">
-                    {formatTime(event.timestamp)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={levelVariant(event.level)}>{event.level ?? "info"}</Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {event.method ?? "—"} {event.path ?? "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant(event.status)}>{event.status ?? "—"}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{event.duration ?? "—"}</TableCell>
-                  <TableCell className="text-muted-foreground pr-4">
-                    {formatSync(event.sync)}
-                  </TableCell>
+      {!isLoading && !errorMessage && total > 0 ? (
+        <div className="flex flex-col gap-4">
+          <div className="bg-card rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-4">Time</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead>Request</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead className="pr-4">Sync</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {events.map((event) => (
+                  <TableRow
+                    key={`${event.requestId ?? event.timestamp}-${event.path}-${event.method}`}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedEvent(event)}
+                  >
+                    <TableCell className="text-muted-foreground pl-4 whitespace-nowrap">
+                      {formatTime(event.timestamp)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={levelVariant(event.level)}>{event.level ?? "info"}</Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {event.method ?? "—"} {event.path ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariant(event.status)}>{event.status ?? "—"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{event.duration ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground pr-4">
+                      {formatSync(event.sync)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-muted-foreground text-sm">
+              Showing {range.start}–{range.end} of {total}
+            </p>
+            <Pagination className="mx-0 w-auto justify-end">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    className={!canPrevious ? "pointer-events-none opacity-50" : undefined}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      if (canPrevious) setPage(page - 1);
+                    }}
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <span className="text-muted-foreground px-2 text-sm">
+                    Page {page} of {totalPages}
+                  </span>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    className={!canNext ? "pointer-events-none opacity-50" : undefined}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      if (canNext) setPage(page + 1);
+                    }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </div>
       ) : null}
 

@@ -25,11 +25,13 @@ export const Route = createFileRoute("/api/logs/")({
         }
 
         const date = url.searchParams.get("date") ?? undefined;
-        const limit = Number.parseInt(url.searchParams.get("limit") ?? "200", 10);
+        const page = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
+        const pageSize = Number.parseInt(url.searchParams.get("pageSize") ?? "20", 10);
 
         const result = await readEvlogEvents({
           date,
-          limit: Number.isNaN(limit) ? 200 : limit,
+          page: Number.isNaN(page) ? 1 : page,
+          pageSize: Number.isNaN(pageSize) ? 20 : pageSize,
         });
 
         return Response.json(result);

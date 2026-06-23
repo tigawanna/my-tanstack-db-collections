@@ -1,7 +1,9 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { createMiddleware } from "@tanstack/react-start";
 import { evlogErrorHandler } from "evlog/nitro/v3";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { queryClient } from "@/lib/tanstack/query/queryclient";
 import { ThemeProvider } from "@/lib/tanstack/router/theme-provider";
 import { AppConfig } from "@/utils/system";
 import appCss from "../styles.css?url";
@@ -42,7 +44,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey={AppConfig.themeStorageKey}>
-          <TooltipProvider>{children}</TooltipProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>{children}</TooltipProvider>
+          </QueryClientProvider>
         </ThemeProvider>
         <Scripts />
       </body>

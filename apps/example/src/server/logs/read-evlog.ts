@@ -61,11 +61,21 @@ export async function listEvlogDates(): Promise<string[]> {
 
 export async function readEvlogEvents(options?: {
   date?: string;
-  limit?: number;
-}): Promise<{ date: string; files: string[]; events: EvlogWideEvent[] }> {
+  page?: number;
+  pageSize?: number;
+}): Promise<{
+  date: string;
+  files: string[];
+  events: EvlogWideEvent[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
   const dir = getLogDir();
   const date = options?.date ?? new Date().toISOString().slice(0, 10);
-  const limit = options?.limit ?? 200;
+  const page = Math.max(1, options?.page ?? 1);
+  const pageSize = Math.max(1, options?.pageSize ?? 20);
+  const offset = (page - 1) * pageSize;
 
   const files = (await readdir(dir))
     .filter((file) => file.startsWith(date) && file.endsWith(".jsonl"))
@@ -87,6 +97,9 @@ export async function readEvlogEvents(options?: {
   return {
     date,
     files,
-    events: events.slice(0, limit),
+    events: events.slice(offset, offset + pageSize),
+    total: events.length,
+    page,
+    pageSize,
   };
 }
