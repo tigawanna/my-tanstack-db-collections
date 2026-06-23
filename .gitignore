@@ -43,6 +43,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+.evlog/
 
 # SQLite local databases and dumps
 *.db

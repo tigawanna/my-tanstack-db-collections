@@ -13,7 +13,7 @@ const PULL_LIMIT = 500;
 /**
  * Persists outbound client events to the remote sync store and returns server-assigned sequence numbers.
  *
- * Used by `POST /api/sync/events` in `hono-app.ts`. Each event is inserted into
+ * Used by `POST /api/sync/events`. Each event is inserted into
  * `sync_events` via Drizzle. Duplicate `eventId` values are ignored (idempotent retries)
  * and the existing `globalSeq` is returned instead.
  *
@@ -86,7 +86,7 @@ export async function remotePushEvents(
 /**
  * Fetches server events newer than a global sequence cursor for client replay.
  *
- * Used by `GET /api/sync/events?since=<n>` in `hono-app.ts`. Returns up to 500 rows
+ * Used by `GET /api/sync/events?since=<n>`. Returns up to 500 rows
  * ordered by `globalSeq`, with `hasMore` set when the batch is full so the client can
  * page forward using the returned `cursor`.
  *

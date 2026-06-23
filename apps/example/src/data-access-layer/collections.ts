@@ -44,13 +44,12 @@ const platform = await createBrowserPlatform(
 );
 
 export const db = await createEventSourcedDB({
-  driver: platform.driver,
   persistence: platform.persistence,
   createCollection,
   persistedCollectionOptions,
   sync: {
-    push: "/api/events",
-    pull: "/api/events",
+    push: "/api/sync/events",
+    pull: "/api/sync/events",
     headers: () => ({ Authorization: `Bearer ${getAccessToken()}` }),
   },
   collections: {

@@ -30,7 +30,7 @@
     "daisyui": "^5.5.14",
     "drizzle-orm": "^0.45.2",
     "embla-carousel-react": "^8.6.0",
-    "hono": "^4.12.18",
+    "evlog": "^2.19.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.561.0",
     "motion": "^12.38.0",

@@ -11,7 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardLayoutRouteImport } from './routes/_dashboard/layout'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
-import { Route as ApiSyncSplatRouteImport } from './routes/api/sync/$'
+import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
 
 const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
   id: '/_dashboard',
@@ -22,37 +22,37 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
-const ApiSyncSplatRoute = ApiSyncSplatRouteImport.update({
-  id: '/api/sync/$',
-  path: '/api/sync/$',
+const ApiSyncEventsRoute = ApiSyncEventsRouteImport.update({
+  id: '/api/sync/events',
+  path: '/api/sync/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
-  '/api/sync/$': typeof ApiSyncSplatRoute
+  '/api/sync/events': typeof ApiSyncEventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
-  '/api/sync/$': typeof ApiSyncSplatRoute
+  '/api/sync/events': typeof ApiSyncEventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_dashboard': typeof DashboardLayoutRouteWithChildren
   '/_dashboard/': typeof DashboardIndexRoute
-  '/api/sync/$': typeof ApiSyncSplatRoute
+  '/api/sync/events': typeof ApiSyncEventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/sync/$'
+  fullPaths: '/' | '/api/sync/events'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/sync/$'
-  id: '__root__' | '/_dashboard' | '/_dashboard/' | '/api/sync/$'
+  to: '/' | '/api/sync/events'
+  id: '__root__' | '/_dashboard' | '/_dashboard/' | '/api/sync/events'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   DashboardLayoutRoute: typeof DashboardLayoutRouteWithChildren
-  ApiSyncSplatRoute: typeof ApiSyncSplatRoute
+  ApiSyncEventsRoute: typeof ApiSyncEventsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -71,11 +71,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
-    '/api/sync/$': {
-      id: '/api/sync/$'
-      path: '/api/sync/$'
-      fullPath: '/api/sync/$'
-      preLoaderRoute: typeof ApiSyncSplatRouteImport
+    '/api/sync/events': {
+      id: '/api/sync/events'
+      path: '/api/sync/events'
+      fullPath: '/api/sync/events'
+      preLoaderRoute: typeof ApiSyncEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -95,7 +95,7 @@ const DashboardLayoutRouteWithChildren = DashboardLayoutRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   DashboardLayoutRoute: DashboardLayoutRouteWithChildren,
-  ApiSyncSplatRoute: ApiSyncSplatRoute,
+  ApiSyncEventsRoute: ApiSyncEventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

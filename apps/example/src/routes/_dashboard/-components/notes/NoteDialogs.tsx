@@ -23,6 +23,7 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { db, type Todo } from "@/data-access-layer/collections";
+import { syncEvents } from "@/data-access-layer/sync-events";
 
 import { NotesForm, type NoteFormValues } from "./NotesFoem";
 
@@ -46,6 +47,7 @@ export function CreateNoteDialog({ trigger }: CreateNoteDialogProps) {
         createdAt: now,
         updatedAt: now,
       });
+      void syncEvents();
       setOpen(false);
     } finally {
       setIsPending(false);
@@ -89,6 +91,7 @@ export function EditNoteMenuItem({ note }: EditNoteMenuItemProps) {
         draft.status = values.status;
         draft.updatedAt = Date.now();
       });
+      void syncEvents();
       setOpen(false);
     } finally {
       setIsPending(false);
@@ -138,6 +141,7 @@ export function DeleteNoteMenuItem({ note }: DeleteNoteMenuItemProps) {
     setIsPending(true);
     try {
       db.collections.todos.delete(note.id);
+      void syncEvents();
       setOpen(false);
     } finally {
       setIsPending(false);
