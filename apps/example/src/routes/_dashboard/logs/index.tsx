@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { LogsViewer } from "./-components/LogsViewer";
+
 export const Route = createFileRoute("/_dashboard/logs/")({
-  component: RouteComponent,
+  component: LogsPage,
+  ssr: false,
 });
 
-function RouteComponent() {
-  return <div>Hello "/_dashboard/logs/"!</div>;
+function LogsPage() {
+  return (
+    <div className="min-h-screen flex h-full w-full ">
+      <LogsViewer />
+    </div>
+  );
 }
