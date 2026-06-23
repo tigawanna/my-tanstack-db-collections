@@ -1,9 +1,9 @@
-import { defineConfig } from "vite-plus";
+import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
-import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "url";
+import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   staged: { "*": "vp check --fix" },
@@ -17,7 +17,7 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   ssr: {
-    noExternal: ["@tanstack-db-collections/event-sourced"],
+    noExternal: ["event-sourced-collection"],
   },
   plugins: [
     nitro(),

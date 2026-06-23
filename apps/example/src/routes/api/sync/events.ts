@@ -1,5 +1,5 @@
-import type { OutboundEvent } from "@tanstack-db-collections/event-sourced";
 import { createFileRoute } from "@tanstack/react-router";
+import type { OutboundEvent } from "event-sourced-collection";
 import { createError, type RequestLogger } from "evlog";
 import { useRequest } from "nitro/context";
 

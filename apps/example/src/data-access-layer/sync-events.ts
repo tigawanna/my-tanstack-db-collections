@@ -1,4 +1,4 @@
-import type { ManualSyncResult, SyncResult } from "@tanstack-db-collections/event-sourced";
+import type { ManualSyncResult, SyncResult } from "event-sourced-collection";
 
 import { ensureDb } from "./collections";
 

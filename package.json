@@ -13,8 +13,8 @@
     "quality": "turbo run //#lint //#format",
     "quality:fix": "turbo run //#lint:fix //#format:fix",
     "prepare": "vp config",
-    "publish:event-sourced": "pnpm --filter @tanstack-db-collections/event-sourced publish --access public",
-    "pack:event-sourced": "pnpm --filter @tanstack-db-collections/event-sourced exec npm pack --dry-run"
+    "publish:event-sourced": "pnpm --filter event-sourced-collection publish --access public",
+    "pack:event-sourced": "pnpm --filter event-sourced-collection exec npm pack --dry-run"
   },
   "devDependencies": {
     "@typescript/native-preview": "catalog:",

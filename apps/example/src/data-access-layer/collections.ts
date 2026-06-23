@@ -3,7 +3,7 @@ import type {
   OutboundEvent,
   PullResponse,
   PushResponse,
-} from "@tanstack-db-collections/event-sourced";
+} from "event-sourced-collection";
 
 export type User = {
   id: string;
@@ -80,8 +80,8 @@ async function initDb(): Promise<AppDb> {
     openBrowserWASQLiteOPFSDatabase,
     persistedCollectionOptions,
   } = await import("@tanstack/browser-db-sqlite-persistence");
-  const { createEventSourcedDB } = await import("@tanstack-db-collections/event-sourced");
-  const { createBrowserPlatform } = await import("@tanstack-db-collections/event-sourced/browser");
+  const { createEventSourcedDB } = await import("event-sourced-collection");
+  const { createBrowserPlatform } = await import("event-sourced-collection/browser");
 
   const platform = await createBrowserPlatform(
     {

@@ -1,10 +1,10 @@
+import { asc, eq, gt } from "drizzle-orm";
 import type {
   OutboundEvent,
   PullResponse,
   PushConfirmation,
   ServerEvent,
-} from "@tanstack-db-collections/event-sourced";
-import { asc, eq, gt } from "drizzle-orm";
+} from "event-sourced-collection";
 import { getSyncDb, withSyncSchema } from "./db";
 import { syncEvents } from "./schema";
 

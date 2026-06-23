@@ -1,4 +1,4 @@
-import type { InboxEntry, MutationType, OutboxEntry } from "@tanstack-db-collections/event-sourced";
+import type { InboxEntry, MutationType, OutboxEntry } from "event-sourced-collection";
 
 export type SyncEventView = {
   eventId: string;

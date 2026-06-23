@@ -5,10 +5,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
-      "@tanstack-db-collections/event-sourced": fileURLToPath(
+      "event-sourced-collection": fileURLToPath(
         new URL("../../packages/event-sourced-collection/dist/index.mjs", import.meta.url),
       ),
-      "@tanstack-db-collections/event-sourced/browser": fileURLToPath(
+      "event-sourced-collection/browser": fileURLToPath(
         new URL("../../packages/event-sourced-collection/dist/browser.mjs", import.meta.url),
       ),
     },
