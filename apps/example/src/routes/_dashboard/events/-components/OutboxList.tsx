@@ -44,7 +44,7 @@ export function OutboxList() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-sm">
-          Push pending outbox events and replay inbox events into local collections.
+          Push pending outbox events, pull remote events, and replay pending inbox mutations.
         </p>
         <Button type="button" onClick={handleManualSync} disabled={syncing}>
           {syncing ? <Spinner className="size-4" /> : <RefreshCw className="size-4" />}
