@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { uuidv7 } from "uuidv7";
 
 import {
@@ -19,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { db, type Todo } from "@/data-access-layer/collections";
 
@@ -71,18 +73,15 @@ export function CreateNoteDialog({ trigger }: CreateNoteDialogProps) {
   );
 }
 
-interface UpdateNoteDialogProps {
-  note: Todo | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface EditNoteMenuItemProps {
+  note: Todo;
 }
 
-export function UpdateNoteDialog({ note, open, onOpenChange }: UpdateNoteDialogProps) {
+export function EditNoteMenuItem({ note }: EditNoteMenuItemProps) {
+  const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
   const handleUpdate = async (values: NoteFormValues) => {
-    if (!note) return;
-
     setIsPending(true);
     try {
       db.collections.todos.update(note.id, (draft) => {
@@ -90,79 +89,97 @@ export function UpdateNoteDialog({ note, open, onOpenChange }: UpdateNoteDialogP
         draft.status = values.status;
         draft.updatedAt = Date.now();
       });
-      onOpenChange(false);
+      setOpen(false);
     } finally {
       setIsPending(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Note</DialogTitle>
-        </DialogHeader>
-        {open && note ? (
-          <NotesForm
-            key={note.id}
-            defaultValues={{ title: note.title, status: note.status }}
-            onSave={handleUpdate}
-            isPending={isPending}
-            submitLabel="Save Note"
-          />
-        ) : null}
-      </DialogContent>
-    </Dialog>
+    <>
+      <DropdownMenuItem
+        onSelect={(event) => {
+          event.preventDefault();
+          setOpen(true);
+        }}
+      >
+        <Pencil />
+        Edit
+      </DropdownMenuItem>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Note</DialogTitle>
+          </DialogHeader>
+          {open ? (
+            <NotesForm
+              key={note.id}
+              defaultValues={{ title: note.title, status: note.status }}
+              onSave={handleUpdate}
+              isPending={isPending}
+              submitLabel="Save Note"
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
-interface DeleteNoteDialogProps {
-  note: Todo | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface DeleteNoteMenuItemProps {
+  note: Todo;
 }
 
-export function DeleteNoteDialog({ note, open, onOpenChange }: DeleteNoteDialogProps) {
+export function DeleteNoteMenuItem({ note }: DeleteNoteMenuItemProps) {
+  const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
   const handleDelete = async () => {
-    if (!note) return;
-
     setIsPending(true);
     try {
       db.collections.todos.delete(note.id);
-      onOpenChange(false);
+      setOpen(false);
     } finally {
       setIsPending(false);
     }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete note?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {note
-              ? `"${note.title}" will be permanently removed. This action cannot be undone.`
-              : "This note will be permanently removed. This action cannot be undone."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={isPending}
-            onClick={(event) => {
-              event.preventDefault();
-              void handleDelete();
-            }}
-          >
-            {isPending ? <Spinner /> : null}
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <DropdownMenuItem
+        variant="destructive"
+        onSelect={(event) => {
+          event.preventDefault();
+          setOpen(true);
+        }}
+      >
+        <Trash2 />
+        Delete
+      </DropdownMenuItem>
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{note.title}&rdquo; will be permanently removed. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                void handleDelete();
+              }}
+            >
+              {isPending ? <Spinner /> : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -77,6 +77,9 @@ importers:
       '@tanstack/react-db':
         specifier: ^0.1.87
         version: 0.1.87(react@19.2.7)(typescript@6.0.3)
+      '@tanstack/react-pacer':
+        specifier: 0.21.1
+        version: 0.21.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tanstack/react-router':
         specifier: 1.169.2
         version: 1.169.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -152,6 +155,9 @@ importers:
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.0.0
@@ -2106,6 +2112,10 @@ packages:
     resolution: {integrity: sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw==}
     engines: {node: '>=18'}
 
+  '@tanstack/pacer@0.20.1':
+    resolution: {integrity: sha512-ZNQ1bIL6eUXVKdic0tiImvBVkWrg/IoSK6VIacTrO3d3HAGnd70qFJNJagR/YOJIOw4EKGWnodwpYZkN1pWuVQ==}
+    engines: {node: '>=18'}
+
   '@tanstack/pacer@0.21.1':
     resolution: {integrity: sha512-hB01dd4rlsYcTCNP7wK186jgAe6K5qimgM1Y5Jtvz+9PUaILvpmeLLjmQNUNSO1l23lIt+CeQR6mO1mjlPvRtQ==}
     engines: {node: '>=18'}
@@ -2151,6 +2161,13 @@ packages:
     peerDependencies:
       '@types/react': ^19.2.14
       '@types/react-dom': ^19.2.3
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/react-pacer@0.21.1':
+    resolution: {integrity: sha512-BIBWmxSi+RHuB4Sh8SPyh3i3PVK8GR3yAyxOqXjERyww1cfvKdu2veUfJuTTiR4os1lfdctcS4HAibt8KTmMiw==}
+    engines: {node: '>=18'}
+    peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
 
@@ -4221,6 +4238,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
 snapshots:
 
   '@babel/code-frame@7.27.1':
@@ -5850,6 +5870,11 @@ snapshots:
 
   '@tanstack/pacer-lite@0.2.2': {}
 
+  '@tanstack/pacer@0.20.1':
+    dependencies:
+      '@tanstack/devtools-event-client': 0.4.4
+      '@tanstack/store': 0.9.3
+
   '@tanstack/pacer@0.21.1':
     dependencies:
       '@tanstack/devtools-event-client': 0.4.4
@@ -5911,6 +5936,13 @@ snapshots:
       - preact
       - solid-js
       - vue
+
+  '@tanstack/react-pacer@0.21.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@tanstack/pacer': 0.20.1
+      '@tanstack/react-store': 0.9.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
 
   '@tanstack/react-query-devtools@5.101.0(@tanstack/react-query@5.101.0(react@19.2.7))(react@19.2.7)':
     dependencies:
@@ -7953,3 +7985,5 @@ snapshots:
   yallist@3.1.1: {}
 
   zod@3.25.76: {}
+
+  zod@4.4.3: {}
