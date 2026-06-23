@@ -2,6 +2,7 @@ import { defineConfig } from "nitro";
 import evlog from "evlog/nitro/v3";
 
 export default defineConfig({
+  serverAssets: [{ baseName: "drizzle", dir: "./drizzle" }],
   experimental: {
     asyncContext: true,
   },

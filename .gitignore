@@ -53,3 +53,4 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 *.sql
+!**/drizzle/**/*.sql

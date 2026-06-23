@@ -1,7 +1,8 @@
 import type { SyncResult } from "@tanstack-db-collections/event-sourced";
 
-import { db } from "./collections";
+import { ensureDb } from "./collections";
 
 export async function syncEvents(): Promise<SyncResult> {
-  return db.sync();
+  const database = await ensureDb();
+  return database.sync();
 }
