@@ -7,14 +7,6 @@ import { SearchBox } from "@/components/common/SearchBox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
@@ -27,6 +19,14 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { db, type Todo } from "@/data-access-layer/collections";
 
 import { CreateNoteDialog, DeleteNoteMenuItem, EditNoteMenuItem } from "./NoteDialogs";
@@ -49,11 +49,7 @@ export function NotesList() {
   if (isLoading) {
     return (
       <NotesListScaffold>
-        <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={index} className="h-28 w-full rounded-xl" />
-          ))}
-        </div>
+        <NotesTableSkeleton />
       </NotesListScaffold>
     );
   }
@@ -75,41 +71,87 @@ export function NotesList() {
     );
   }
   return (
-    <div className="grid w-full h-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {notes.map((note) => (
-        <NoteCard key={note.id} note={note} />
-      ))}
-    </div>
+    <NotesListScaffold>
+      <div className="bg-card rounded-xl border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-4">Title</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Updated</TableHead>
+              <TableHead className="w-12 pr-4 text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {notes.map((note) => (
+              <NoteRow key={note.id} note={note} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </NotesListScaffold>
   );
 }
 
-function NoteCard({ note }: { note: Todo }) {
-  const accent = note.status === "complete" ? "bg-emerald-500" : "bg-amber-500";
-
+function NoteRow({ note }: { note: Todo }) {
   return (
-    <Card className="bg-card relative gap-4 overflow-hidden border py-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
-      <span className={`absolute inset-y-0 left-0 w-1 ${accent}`} aria-hidden />
-      <CardHeader className="px-4 pl-5">
-        <CardTitle className="line-clamp-2 text-base">{note.title}</CardTitle>
-        <CardDescription>Updated {formatNoteDate(note.updatedAt)}</CardDescription>
-        <CardAction>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${note.title}`}>
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <EditNoteMenuItem note={note} />
-              <DeleteNoteMenuItem note={note} />
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="px-4 pl-5">
+    <TableRow>
+      <TableCell className="max-w-0 pl-4 font-medium">
+        <span className="block truncate">{note.title}</span>
+      </TableCell>
+      <TableCell>
         <NoteStatusBadge status={note.status} />
-      </CardContent>
-    </Card>
+      </TableCell>
+      <TableCell className="text-muted-foreground">{formatNoteDate(note.updatedAt)}</TableCell>
+      <TableCell className="pr-4 text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${note.title}`}>
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <EditNoteMenuItem note={note} />
+            <DeleteNoteMenuItem note={note} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function NotesTableSkeleton() {
+  return (
+    <div className="bg-card rounded-xl border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="pl-4">Title</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Updated</TableHead>
+            <TableHead className="w-12 pr-4 text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <TableRow key={index}>
+              <TableCell className="pl-4">
+                <Skeleton className="h-4 w-48" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-32" />
+              </TableCell>
+              <TableCell className="pr-4 text-right">
+                <Skeleton className="ml-auto h-8 w-8 rounded-md" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
