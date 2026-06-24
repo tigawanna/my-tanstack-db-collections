@@ -12,6 +12,11 @@ import { OutboxList } from "./OutboxList";
 
 type EventTab = "outbox" | "inbox";
 
+const EVENT_TAB_HINTS: Record<EventTab, string> = {
+  outbox: "Local changes waiting to be pushed to the server.",
+  inbox: "Remote changes received from the server to be applied locally.",
+};
+
 export function EventsView() {
   const [tab, setTab] = useState<EventTab>("outbox");
   const [syncing, setSyncing] = useState(false);
@@ -68,10 +73,13 @@ export function EventsView() {
       {syncMessage ? <p className="text-muted-foreground -mt-3 text-sm">{syncMessage}</p> : null}
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as EventTab)}>
-        <TabsList>
-          <TabsTrigger value="outbox">Outbox</TabsTrigger>
-          <TabsTrigger value="inbox">Inbox</TabsTrigger>
-        </TabsList>
+        <div className="flex flex-col gap-2">
+          <TabsList>
+            <TabsTrigger value="outbox">Outbox</TabsTrigger>
+            <TabsTrigger value="inbox">Inbox</TabsTrigger>
+          </TabsList>
+          <p className="text-muted-foreground text-sm">{EVENT_TAB_HINTS[tab]}</p>
+        </div>
       </Tabs>
 
       <Activity mode={tab === "outbox" ? "visible" : "hidden"}>

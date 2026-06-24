@@ -4,6 +4,7 @@ import { createMiddleware } from "@tanstack/react-start";
 import { evlogErrorHandler } from "evlog/nitro/v3";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { EventSourcedSyncRunner } from "@/components/common/EventSourcedSyncRunner";
+import { ErrorPage } from "@/lib/tanstack/router/ErrorPage";
 import { RouterNotFoundComponent } from "@/lib/tanstack/router/RouterNotFoundComponent";
 import { queryClient } from "@/lib/tanstack/query/queryclient";
 import { ThemeProvider } from "@/lib/tanstack/router/theme-provider";
@@ -36,6 +37,7 @@ export const Route = createRootRoute({
     ],
   }),
   notFoundComponent: RouterNotFoundComponent,
+  errorComponent: ErrorPage,
   shellComponent: RootDocument,
 });
 
