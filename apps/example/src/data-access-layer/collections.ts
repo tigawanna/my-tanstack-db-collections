@@ -1,3 +1,4 @@
+import { createBrowserEventSourcedDB } from "event-sourced-collection/browser";
 import type {
   EventSourcedDB,
   OutboundEvent,
@@ -35,9 +36,6 @@ type AppCollectionDefs = {
 
 export type AppDb = EventSourcedDB<AppCollectionDefs>;
 
-let dbInstance: AppDb | null = null;
-let initPromise: Promise<AppDb> | null = null;
-
 const getAccessToken = (): string => localStorage.getItem("accessToken") ?? "";
 
 async function pushEvents(events: ReadonlyArray<OutboundEvent>): Promise<PushResponse> {
@@ -72,72 +70,32 @@ async function pullEvents({ since }: { since: number }): Promise<PullResponse> {
   return response.json() as Promise<PullResponse>;
 }
 
-async function initDb(): Promise<AppDb> {
-  const { createCollection } = await import("@tanstack/react-db");
-  const {
-    BrowserCollectionCoordinator,
-    createBrowserWASQLitePersistence,
-    openBrowserWASQLiteOPFSDatabase,
-    persistedCollectionOptions,
-  } = await import("@tanstack/browser-db-sqlite-persistence");
-  const { createEventSourcedDB } = await import("event-sourced-collection");
-  const { createBrowserPlatform } = await import("event-sourced-collection/browser");
+const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
+  databaseName: "my-app.sqlite",
+  debug: import.meta.env.DEV,
+  collections: {
+    users: { getKey: (user: User) => user.id },
+    todos: { getKey: (todo: Todo) => todo.id },
+    settings: { getKey: (settings: AppSettings) => settings.id },
+  },
+  sync: { pushEvents, pullEvents },
+  load: async () => {
+    const { createCollection } = await import("@tanstack/react-db");
+    const {
+      BrowserCollectionCoordinator,
+      createBrowserWASQLitePersistence,
+      openBrowserWASQLiteOPFSDatabase,
+      persistedCollectionOptions,
+    } = await import("@tanstack/browser-db-sqlite-persistence");
 
-  const platform = await createBrowserPlatform(
-    {
+    return {
       openBrowserWASQLiteOPFSDatabase,
       createBrowserWASQLitePersistence,
       BrowserCollectionCoordinator,
-    },
-    { databaseName: "my-app.sqlite" },
-  );
-
-  return createEventSourcedDB({
-    persistence: platform.persistence,
-    createCollection,
-    persistedCollectionOptions,
-    debug: import.meta.env.DEV,
-    sync: {
-      pushEvents,
-      pullEvents,
-    },
-    collections: {
-      users: { getKey: (user: User) => user.id },
-      todos: { getKey: (todo: Todo) => todo.id },
-      settings: { getKey: (settings: AppSettings) => settings.id },
-    },
-  });
-}
-
-export async function ensureDb(): Promise<AppDb> {
-  if (typeof window === "undefined") {
-    throw new Error("Event-sourced DB is only available in the browser");
-  }
-
-  if (dbInstance) {
-    return dbInstance;
-  }
-
-  if (!initPromise) {
-    initPromise = initDb().then((instance) => {
-      dbInstance = instance;
-      return instance;
-    });
-  }
-
-  return initPromise;
-}
-
-function getDb(): AppDb {
-  if (!dbInstance) {
-    throw new Error("Database is not initialized. Call ensureDb() first.");
-  }
-
-  return dbInstance;
-}
-
-export const db = new Proxy({} as AppDb, {
-  get(_target, prop, receiver) {
-    return Reflect.get(getDb(), prop, receiver);
+      createCollection,
+      persistedCollectionOptions,
+    };
   },
 });
+
+export { db, ensureDb };
