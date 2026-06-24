@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardLayoutRouteImport } from './routes/_dashboard/layout'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
+import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
 import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs/index'
 import { Route as DashboardEventsIndexRouteImport } from './routes/_dashboard/events/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
@@ -29,6 +30,11 @@ const ApiLogsIndexRoute = ApiLogsIndexRouteImport.update({
   id: '/api/logs/',
   path: '/api/logs/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => DashboardLayoutRoute,
 } as any)
 const DashboardLogsIndexRoute = DashboardLogsIndexRouteImport.update({
   id: '/logs/',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/events/': typeof DashboardEventsIndexRoute
   '/logs/': typeof DashboardLogsIndexRoute
+  '/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/events': typeof DashboardEventsIndexRoute
   '/logs': typeof DashboardLogsIndexRoute
+  '/settings': typeof DashboardSettingsIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
 }
 export interface FileRoutesById {
@@ -67,13 +75,20 @@ export interface FileRoutesById {
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/_dashboard/events/': typeof DashboardEventsIndexRoute
   '/_dashboard/logs/': typeof DashboardLogsIndexRoute
+  '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/sync/events' | '/events/' | '/logs/' | '/api/logs/'
+  fullPaths:
+    | '/'
+    | '/api/sync/events'
+    | '/events/'
+    | '/logs/'
+    | '/settings/'
+    | '/api/logs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/sync/events' | '/events' | '/logs' | '/api/logs'
+  to: '/' | '/api/sync/events' | '/events' | '/logs' | '/settings' | '/api/logs'
   id:
     | '__root__'
     | '/_dashboard'
@@ -81,6 +96,7 @@ export interface FileRouteTypes {
     | '/api/sync/events'
     | '/_dashboard/events/'
     | '/_dashboard/logs/'
+    | '/_dashboard/settings/'
     | '/api/logs/'
   fileRoutesById: FileRoutesById
 }
@@ -113,6 +129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLogsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/settings/': {
+      id: '/_dashboard/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
     '/_dashboard/logs/': {
       id: '/_dashboard/logs/'
       path: '/logs'
@@ -141,12 +164,14 @@ interface DashboardLayoutRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
+  DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardEventsIndexRoute: DashboardEventsIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
+  DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
 
 const DashboardLayoutRouteWithChildren = DashboardLayoutRoute._addFileChildren(

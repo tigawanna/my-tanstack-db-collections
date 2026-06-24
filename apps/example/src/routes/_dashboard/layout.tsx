@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { ensureDb } from "@/data-access-layer/collections";
+import { ensureAppSettings } from "@/data-access-layer/app-settings";
 import { useEventSourcedSync } from "@/hooks/common/use-event-sourced-sync";
+import { useSyncEnabled } from "@/hooks/common/use-sync-enabled";
 import { DashboardLayout } from "./-components/dashboard-sidebar/DashboardLayout";
 import { getDashboardPrimaryRoutes } from "./-components/dashboard-sidebar/dashboard_routes";
 
@@ -14,13 +15,14 @@ function DashboardShell() {
   const [dbReady, setDbReady] = useState(false);
 
   useEffect(() => {
-    void ensureDb().then(() => {
+    void ensureAppSettings().then(() => {
       setDbReady(true);
     });
   }, []);
 
-  const syncQuery = useEventSourcedSync(dbReady);
-  const waitingForFirstSync = dbReady && syncQuery.isPending && !syncQuery.isSuccess;
+  const syncEnabled = useSyncEnabled(dbReady);
+  const syncQuery = useEventSourcedSync(dbReady && syncEnabled);
+  const waitingForFirstSync = dbReady && syncEnabled && syncQuery.isPending && !syncQuery.isSuccess;
 
   if (!dbReady || waitingForFirstSync) {
     return (

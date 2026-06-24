@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 
-import { ensureDb } from "@/data-access-layer/collections";
+import { ensureAppSettings } from "@/data-access-layer/app-settings";
 import { useEventSourcedSync } from "@/hooks/common/use-event-sourced-sync";
+import { useSyncEnabled } from "@/hooks/common/use-sync-enabled";
 
 export function EventSourcedSyncRunner() {
-  const [enabled, setEnabled] = useState(false);
+  const [dbReady, setDbReady] = useState(false);
 
   useEffect(() => {
-    void ensureDb().then(() => {
-      setEnabled(true);
+    void ensureAppSettings().then(() => {
+      setDbReady(true);
     });
   }, []);
 
-  useEventSourcedSync(enabled);
+  const syncEnabled = useSyncEnabled(dbReady);
+  useEventSourcedSync(dbReady && syncEnabled);
 
   return null;
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { manualSyncEvents } from "@/data-access-layer/sync-events";
+import { useSyncEnabled } from "@/hooks/common/use-sync-enabled";
 
 import { InboxList } from "./InboxList";
 import { OutboxList } from "./OutboxList";
@@ -15,8 +16,14 @@ export function EventsView() {
   const [tab, setTab] = useState<EventTab>("outbox");
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const syncEnabled = useSyncEnabled(true);
 
   const handleManualSync = async () => {
+    if (!syncEnabled) {
+      setSyncMessage("Sync is disabled in Settings.");
+      return;
+    }
+
     setSyncing(true);
     setSyncMessage(null);
 
@@ -47,7 +54,12 @@ export function EventsView() {
             Inspect the local outbox and inbox event log.
           </p>
         </div>
-        <Button type="button" onClick={handleManualSync} disabled={syncing} className="shrink-0">
+        <Button
+          type="button"
+          onClick={handleManualSync}
+          disabled={syncing || !syncEnabled}
+          className="shrink-0"
+        >
           {syncing ? <Spinner className="size-4" /> : <RefreshCw className="size-4" />}
           Sync now
         </Button>
