@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSyncEnabled } from "event-sourced-collection/react";
 import { useEffect, useState } from "react";
+
 import { Spinner } from "@/components/ui/spinner";
-import { ensureAppSettings } from "@/data-access-layer/app-settings";
+import { APP_SETTINGS_ID, ensureAppSettings } from "@/data-access-layer/app-settings";
+import { ensureDb } from "@/data-access-layer/collections";
 import { useEventSourcedSync } from "@/hooks/common/use-event-sourced-sync";
-import { useSyncEnabled } from "@/hooks/common/use-sync-enabled";
+
 import { DashboardLayout } from "./-components/dashboard-sidebar/DashboardLayout";
 import { getDashboardPrimaryRoutes } from "./-components/dashboard-sidebar/dashboard_routes";
 
@@ -20,7 +23,11 @@ function DashboardShell() {
     });
   }, []);
 
-  const syncEnabled = useSyncEnabled(dbReady);
+  const syncEnabled = useSyncEnabled({
+    enabled: dbReady,
+    settingsId: APP_SETTINGS_ID,
+    ensureDb,
+  });
   const syncQuery = useEventSourcedSync(dbReady && syncEnabled);
   const waitingForFirstSync = dbReady && syncEnabled && syncQuery.isPending && !syncQuery.isSuccess;
 

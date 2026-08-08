@@ -1,11 +1,13 @@
 import { Activity, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { useManualSync } from "event-sourced-collection/react";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { APP_SETTINGS_ID } from "@/data-access-layer/app-settings";
+import { ensureDb } from "@/data-access-layer/collections";
 import { manualSyncEvents } from "@/data-access-layer/sync-events";
-import { useSyncEnabled } from "@/hooks/common/use-sync-enabled";
 
 import { InboxList } from "./InboxList";
 import { OutboxList } from "./OutboxList";
@@ -19,36 +21,11 @@ const EVENT_TAB_HINTS: Record<EventTab, string> = {
 
 export function EventsView() {
   const [tab, setTab] = useState<EventTab>("outbox");
-  const [syncing, setSyncing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<string | null>(null);
-  const syncEnabled = useSyncEnabled(true);
-
-  const handleManualSync = async () => {
-    if (!syncEnabled) {
-      setSyncMessage("Sync is disabled in Settings.");
-      return;
-    }
-
-    setSyncing(true);
-    setSyncMessage(null);
-
-    try {
-      const result = await manualSyncEvents();
-
-      if (result.errors.length > 0) {
-        setSyncMessage(`Sync failed: ${result.errors[0]?.message ?? "Unknown error"}`);
-        return;
-      }
-
-      setSyncMessage(
-        `Pushed ${result.pushed}, pulled ${result.pulled}, replayed ${result.replayed} inbox event(s).`,
-      );
-    } catch (error) {
-      setSyncMessage(error instanceof Error ? error.message : "Sync failed");
-    } finally {
-      setSyncing(false);
-    }
-  };
+  const { syncEnabled, syncing, syncMessage, runSync } = useManualSync({
+    settingsId: APP_SETTINGS_ID,
+    ensureDb,
+    sync: manualSyncEvents,
+  });
 
   return (
     <div className="bg-muted/30 mx-auto flex min-h-full w-full max-w-5xl flex-col gap-6 rounded-xl p-4 sm:p-6">
@@ -61,7 +38,7 @@ export function EventsView() {
         </div>
         <Button
           type="button"
-          onClick={handleManualSync}
+          onClick={() => void runSync()}
           disabled={syncing || !syncEnabled}
           className="shrink-0"
         >

@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSyncEnabled } from "event-sourced-collection/react";
 import { useState } from "react";
 
-import { setSyncEnabled } from "@/data-access-layer/app-settings";
-import { useSyncEnabled } from "@/hooks/common/use-sync-enabled";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { APP_SETTINGS_ID, setSyncEnabled } from "@/data-access-layer/app-settings";
+import { ensureDb } from "@/data-access-layer/collections";
 
 export const Route = createFileRoute("/_dashboard/settings/")({
   component: SettingsPage,
@@ -12,7 +13,10 @@ export const Route = createFileRoute("/_dashboard/settings/")({
 });
 
 function SettingsPage() {
-  const syncEnabled = useSyncEnabled(true);
+  const syncEnabled = useSyncEnabled({
+    settingsId: APP_SETTINGS_ID,
+    ensureDb,
+  });
   const [saving, setSaving] = useState(false);
 
   const handleSyncToggle = (checked: boolean) => {

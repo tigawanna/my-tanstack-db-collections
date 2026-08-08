@@ -250,6 +250,12 @@ importers:
       '@tanstack/db-sqlite-persistence-core':
         specifier: ^0.2.1
         version: 0.2.1(typescript@6.0.3)
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.17
+      react:
+        specifier: ^19.2.0
+        version: 19.2.7
       tsdown:
         specifier: ^0.22.3
         version: 0.22.3(@arethetypeswrong/core@0.18.4)(@typescript/native-preview@7.0.0-dev.20260519.1)(tsx@4.22.4)(typescript@6.0.3)(unrun@0.2.39)
