@@ -1,0 +1,68 @@
+{
+  "name": "drizzle-sync-engine",
+  "version": "0.0.1",
+  "description": "Drizzle-backed event sync engine with extensible inbox/outbox tables (SQLite + PGlite/Postgres)",
+  "keywords": [
+    "drizzle",
+    "event-sourcing",
+    "local-first",
+    "offline",
+    "offline-first",
+    "pglite",
+    "postgres",
+    "sqlite",
+    "sync"
+  ],
+  "bugs": {
+    "url": "https://github.com/tigawanna/my-tanstack-db-collections/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tigawanna/my-tanstack-db-collections.git"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./pg": "./dist/pg.mjs",
+    "./sqlite": "./dist/sqlite.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "check-types": "tsgo --noEmit",
+    "prepublishOnly": "pnpm run build",
+    "check-exports": "attw --pack . --profile node16 --ignore-rules cjs-resolves-to-esm",
+    "postbuild": "npm run check-exports"
+  },
+  "dependencies": {
+    "uuidv7": "^1.2.1"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.4",
+    "@repo/typescript-config": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "tsdown": "^0.22.3",
+    "typescript": "catalog:",
+    "vitest": "4.1.9"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=0.45.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
