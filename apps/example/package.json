@@ -32,7 +32,6 @@
     "cmdk": "^1.1.1",
     "daisyui": "^5.5.14",
     "drizzle-orm": "^0.45.2",
-    "drizzle-sync-engine": "workspace:*",
     "embla-carousel-react": "^8.6.0",
     "event-sourced-collection": "workspace:*",
     "evlog": "^2.19.2",

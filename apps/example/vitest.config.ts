@@ -18,5 +18,7 @@ export default defineConfig({
     exclude: ["**/node_modules/**", "**/dist/**", "**/.output/**"],
     globals: false,
     restoreMocks: true,
+    // The app has no tests of its own yet; the suite lives in the packages.
+    passWithNoTests: true,
   },
 });

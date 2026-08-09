@@ -7,7 +7,7 @@ catalog:
   typescript: 6.0.3
   vite: npm:@voidzero-dev/vite-plus-core@latest
   vite-plus: latest
-  vitest: npm:@voidzero-dev/vite-plus-test@^0.1.20
+  vitest: ^4.1.10
 
 onlyBuiltDependencies:
   - core-js
