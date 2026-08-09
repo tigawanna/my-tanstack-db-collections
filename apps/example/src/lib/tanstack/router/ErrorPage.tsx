@@ -44,7 +44,7 @@ function formatErrorReport(error: unknown, info?: { componentStack: string }) {
       try {
         sections.push(JSON.stringify(value, null, 2));
       } catch {
-        sections.push(String(value));
+        sections.push(Object.prototype.toString.call(value));
       }
       return;
     }

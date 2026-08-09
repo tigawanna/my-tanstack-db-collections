@@ -15,6 +15,13 @@
       "when": 1786210276919,
       "tag": "0001_flippant_tigra",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786278657353,
+      "tag": "0002_flat_black_panther",
+      "breakpoints": true
     }
   ]
 }

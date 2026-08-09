@@ -8,9 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-interface TSRBreadCrumbsProps {}
-
-export function TSRBreadCrumbs({}: TSRBreadCrumbsProps) {
+export function TSRBreadCrumbs() {
   const { breadcrumb_routes } = useTSRBreadCrumbs();
   if (breadcrumb_routes.length < 2) return null;
   return (

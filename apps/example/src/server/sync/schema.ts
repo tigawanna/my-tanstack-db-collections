@@ -22,10 +22,26 @@ export const syncEvents = sqliteTable(
     txId: text("tx_id"),
     /** Origin device, so a client can recognize its own events after outbox pruning. */
     clientId: text("client_id"),
+    /** Payload shape version, so clients can upcast events authored by older builds. */
+    schemaVersion: integer("schema_version").notNull().default(1),
     clientTimestamp: integer("client_timestamp").notNull(),
     serverTimestamp: integer("server_timestamp")
       .notNull()
       .default(sql`(CAST(unixepoch('subsec') * 1000 AS INTEGER))`),
   },
-  (table) => [index("idx_sync_events_global_seq").on(table.globalSeq)],
+  (table) => [
+    index("idx_sync_events_global_seq").on(table.globalSeq),
+    // Backs the conflict check, which reads the newest event for a given row.
+    index("idx_sync_events_row").on(table.collectionId, table.key, table.globalSeq),
+  ],
 );
+
+/**
+ * Single-row identity for this event store. Clients compare it against the value
+ * they last synced with; a change means their cursor is meaningless and they
+ * should re-pull from zero.
+ */
+export const syncBackend = sqliteTable("sync_backend", {
+  id: integer("id").primaryKey(),
+  backendId: text("backend_id").notNull(),
+});

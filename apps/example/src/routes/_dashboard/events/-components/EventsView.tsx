@@ -9,14 +9,17 @@ import { APP_SETTINGS_ID } from "@/data-access-layer/app-settings";
 import { ensureDb } from "@/data-access-layer/collections";
 import { manualSyncEvents } from "@/data-access-layer/sync-events";
 
+import { DeadLetterList } from "./DeadLetterList";
 import { InboxList } from "./InboxList";
 import { OutboxList } from "./OutboxList";
+import { SyncStatusStrip } from "./SyncStatusStrip";
 
-type EventTab = "outbox" | "inbox";
+type EventTab = "outbox" | "inbox" | "deadletter";
 
 const EVENT_TAB_HINTS: Record<EventTab, string> = {
   outbox: "Local changes waiting to be pushed to the server.",
   inbox: "Remote changes received from the server to be applied locally.",
+  deadletter: "Permanently rejected events. Retry to requeue, or discard to drop them.",
 };
 
 export function EventsView() {
@@ -33,7 +36,8 @@ export function EventsView() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight">Events</h1>
           <p className="text-muted-foreground text-sm">
-            Inspect the local outbox and inbox event log.
+            Inspect the local outbox, inbox, and dead-letter queue. Status below uses{" "}
+            <code className="text-xs">subscribeSyncStatus</code>.
           </p>
         </div>
         <Button
@@ -49,11 +53,14 @@ export function EventsView() {
 
       {syncMessage ? <p className="text-muted-foreground -mt-3 text-sm">{syncMessage}</p> : null}
 
+      <SyncStatusStrip />
+
       <Tabs value={tab} onValueChange={(value) => setTab(value as EventTab)}>
         <div className="flex flex-col gap-2">
           <TabsList>
             <TabsTrigger value="outbox">Outbox</TabsTrigger>
             <TabsTrigger value="inbox">Inbox</TabsTrigger>
+            <TabsTrigger value="deadletter">Dead letter</TabsTrigger>
           </TabsList>
           <p className="text-muted-foreground text-sm">{EVENT_TAB_HINTS[tab]}</p>
         </div>
@@ -64,6 +71,9 @@ export function EventsView() {
       </Activity>
       <Activity mode={tab === "inbox" ? "visible" : "hidden"}>
         <InboxList />
+      </Activity>
+      <Activity mode={tab === "deadletter" ? "visible" : "hidden"}>
+        <DeadLetterList />
       </Activity>
     </div>
   );

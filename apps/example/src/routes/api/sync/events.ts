@@ -67,18 +67,20 @@ export const Route = createFileRoute("/api/sync/events")({
         });
 
         // Persist to server SQLite; duplicates are skipped by eventId
-        const confirmed = await remotePushEvents(events);
+        const result = await remotePushEvents(events);
 
         log?.set({
           sync: {
             operation: "push",
             incomingCount: events.length,
-            confirmedCount: confirmed.length,
+            confirmedCount: result.confirmed.length,
+            failedCount: result.failed?.length ?? 0,
           },
         });
 
-        // Client marks events synced using the returned globalSeq values
-        return Response.json({ confirmed });
+        // Client marks events synced using the returned globalSeq values, and
+        // routes anything in `failed` to retry or the dead-letter queue.
+        return Response.json(result);
       },
     },
   },

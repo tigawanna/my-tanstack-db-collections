@@ -31,7 +31,15 @@ export async function baselineLegacyMigrationsIfNeeded(
   `);
 
   const appliedResult = await client.execute("SELECT hash FROM __drizzle_migrations");
-  const appliedHashes = new Set(appliedResult.rows.map((row) => String(row.hash)));
+  const appliedHashes = new Set(
+    appliedResult.rows.map((row) => {
+      const hash = row.hash;
+      if (typeof hash !== "string") {
+        throw new Error("Expected __drizzle_migrations.hash to be a string");
+      }
+      return hash;
+    }),
+  );
 
   const journal = JSON.parse(
     readFileSync(path.join(migrationsFolder, "meta", "_journal.json"), "utf8"),

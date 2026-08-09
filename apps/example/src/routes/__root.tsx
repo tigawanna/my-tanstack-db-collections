@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createMiddleware } from "@tanstack/react-start";
 import { evlogErrorHandler } from "evlog/nitro/v3";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { EventSourcedSyncRunner } from "@/components/common/EventSourcedSyncRunner";
 import { ErrorPage } from "@/lib/tanstack/router/ErrorPage";
@@ -52,6 +53,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <QueryClientProvider client={queryClient}>
             <EventSourcedSyncRunner />
             <TooltipProvider>{children}</TooltipProvider>
+            <Toaster richColors closeButton />
           </QueryClientProvider>
         </ThemeProvider>
         <Scripts />

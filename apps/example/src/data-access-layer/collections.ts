@@ -15,6 +15,9 @@
  * Built-in collections (always present, do not register these names):
  * - `db.collections.outbox` — local mutations waiting to upload
  * - `db.collections.inbox` — server events pulled to this device
+ * - `db.collections.deadletter` — permanently rejected / exhausted retries
+ * - `db.collections.syncmeta` — pull cursor + backend identity
+ * - `db.collections.rowversions` — per-row versions when conflictDetection is on
  */
 
 import { BasicIndex } from "@tanstack/db";
@@ -22,10 +25,12 @@ import { createBrowserEventSourcedDB } from "event-sourced-collection/browser";
 import type {
   CollectionDef,
   EventSourcedDB,
+  EventSourcedHooks,
   OutboundEvent,
   PullResponse,
   PushResponse,
 } from "event-sourced-collection";
+import { toast } from "sonner";
 
 // Row shapes stored in SQLite — one type per registered collection below.
 export type User = {
@@ -61,6 +66,24 @@ type AppCollectionDefs = {
 };
 
 export type AppDb = EventSourcedDB<AppCollectionDefs>;
+
+const CLIENT_ID_STORAGE_KEY = "example-sync-client-id";
+
+/** Stable device id across reloads so the server can attribute events. */
+function getPersistedClientId(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+
+  try {
+    const existing = localStorage.getItem(CLIENT_ID_STORAGE_KEY);
+    if (existing) return existing;
+
+    const created = crypto.randomUUID();
+    localStorage.setItem(CLIENT_ID_STORAGE_KEY, created);
+    return created;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
 
 const getAccessToken = (): string => localStorage.getItem("accessToken") ?? "";
 
@@ -98,10 +121,42 @@ async function pullEvents({ since }: { since: number }): Promise<PullResponse> {
   return response.json() as Promise<PullResponse>;
 }
 
+/**
+ * Observe-only lifecycle hooks. Throws are swallowed by the package so these
+ * must never drive control flow — toast / log only.
+ */
+const syncHooks: EventSourcedHooks = {
+  onReady: ({ clientId, pullCursor }) => {
+    if (import.meta.env.DEV) {
+      console.info("[sync] ready", { clientId, pullCursor });
+    }
+  },
+  onSyncError: ({ phase, error }) => {
+    toast.error(`Sync ${phase} failed`, { description: error.message });
+  },
+  onDeadLetter: (entry) => {
+    toast.warning("Event moved to dead letter", {
+      description: `${entry.collectionId}/${String(entry.key)} — ${entry.message}`,
+    });
+  },
+  onBackendMismatch: ({ expected, received, policy }) => {
+    toast.message("Sync backend changed", {
+      description: `Expected ${expected ?? "none"}, got ${received} (policy: ${policy}).`,
+    });
+  },
+  onSyncComplete: ({ trigger, result }) => {
+    if (!import.meta.env.DEV) return;
+    if (result.deferred || result.errors.length > 0) return;
+    if (result.pushed === 0 && result.pulled === 0 && result.deadLettered === 0) return;
+    console.info(`[sync] ${trigger} complete`, result);
+  },
+};
+
 // Lazy singleton: ensureDb() opens SQLite once; db proxy forwards after init.
 const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
   databaseName: "my-app.sqlite",
   debug: import.meta.env.DEV,
+  clientId: getPersistedClientId(),
 
   // Register collections here — each key becomes db.collections.<key>.
   // indexes: optional; each entry calls collection.createIndex() at init (speeds up filters/joins).
@@ -125,6 +180,30 @@ const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
   // Initial default; users can toggle at runtime via Settings (app-settings.ts → setSyncEnabled).
   syncEnabled: true,
   sync: { pushEvents, pullEvents },
+
+  // Stamp payload shape version; pair with upcastEvent when you evolve row schemas.
+  eventSchemaVersion: 1,
+
+  // Re-pull a few seqs on every sync. Harmless (replay is idempotent); useful if
+  // the server ever assigns sequences before commit (Postgres BIGSERIAL). Our
+  // libsql server uses BEGIN IMMEDIATE, so this is belt-and-suspenders.
+  pullOverlap: 5,
+
+  // Stamp baseVersion on writes; server rejects stale edits with CONFLICT.
+  conflictDetection: true,
+
+  // Permanent failures and exhausted retries land in deadletter (see Events UI).
+  retry: {
+    maxAttempts: 8,
+    baseDelayMs: 1_000,
+    maxDelayMs: 5 * 60_000,
+  },
+  pushBatchSize: 100,
+
+  // Recreated server DB → new backendId → reset pull cursor and re-sync from 0.
+  backendMismatch: "resetCursor",
+
+  hooks: syncHooks,
 
   // Dynamic imports keep SSR bundles from loading wa-sqlite/OPFS until first ensureDb().
   load: async () => {
