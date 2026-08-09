@@ -69,6 +69,9 @@ export async function remotePushEvents(
           type: event.type,
           key: String(event.key),
           payload: JSON.stringify(event.payload),
+          previous: event.previous ? JSON.stringify(event.previous) : null,
+          txId: event.txId,
+          clientId: event.clientId,
           clientTimestamp: event.timestamp,
         })
         .returning({ globalSeq: syncEvents.globalSeq });
@@ -124,6 +127,9 @@ export async function remotePullEvents(since: number): Promise<PullResponse> {
       type: row.type as ServerEvent["type"],
       key: row.key,
       payload: JSON.parse(row.payload) as Record<string, unknown>,
+      previous: row.previous ? (JSON.parse(row.previous) as Record<string, unknown>) : null,
+      txId: row.txId ?? undefined,
+      clientId: row.clientId,
       timestamp: row.clientTimestamp,
       cursor: String(row.globalSeq),
     }));

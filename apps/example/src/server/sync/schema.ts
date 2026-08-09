@@ -16,6 +16,12 @@ export const syncEvents = sqliteTable(
     type: text("type").notNull(),
     key: text("key").notNull(),
     payload: text("payload").notNull(),
+    /** Row state before the mutation; null for inserts. Makes events invertible. */
+    previous: text("previous"),
+    /** Shared by every event produced by one client transaction. */
+    txId: text("tx_id"),
+    /** Origin device, so a client can recognize its own events after outbox pruning. */
+    clientId: text("client_id"),
     clientTimestamp: integer("client_timestamp").notNull(),
     serverTimestamp: integer("server_timestamp")
       .notNull()

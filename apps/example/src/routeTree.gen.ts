@@ -15,6 +15,7 @@ import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
 import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs/index'
 import { Route as DashboardEventsIndexRouteImport } from './routes/_dashboard/events/index'
+import { Route as DashboardDrizzleSyncIndexRouteImport } from './routes/_dashboard/drizzle-sync/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
 
 const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
@@ -46,6 +47,12 @@ const DashboardEventsIndexRoute = DashboardEventsIndexRouteImport.update({
   path: '/events/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
+const DashboardDrizzleSyncIndexRoute =
+  DashboardDrizzleSyncIndexRouteImport.update({
+    id: '/drizzle-sync/',
+    path: '/drizzle-sync/',
+    getParentRoute: () => DashboardLayoutRoute,
+  } as any)
 const ApiSyncEventsRoute = ApiSyncEventsRouteImport.update({
   id: '/api/sync/events',
   path: '/api/sync/events',
@@ -55,6 +62,7 @@ const ApiSyncEventsRoute = ApiSyncEventsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
+  '/drizzle-sync/': typeof DashboardDrizzleSyncIndexRoute
   '/events/': typeof DashboardEventsIndexRoute
   '/logs/': typeof DashboardLogsIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
@@ -63,6 +71,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
+  '/drizzle-sync': typeof DashboardDrizzleSyncIndexRoute
   '/events': typeof DashboardEventsIndexRoute
   '/logs': typeof DashboardLogsIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
@@ -73,6 +82,7 @@ export interface FileRoutesById {
   '/_dashboard': typeof DashboardLayoutRouteWithChildren
   '/_dashboard/': typeof DashboardIndexRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
+  '/_dashboard/drizzle-sync/': typeof DashboardDrizzleSyncIndexRoute
   '/_dashboard/events/': typeof DashboardEventsIndexRoute
   '/_dashboard/logs/': typeof DashboardLogsIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
@@ -83,17 +93,26 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/api/sync/events'
+    | '/drizzle-sync/'
     | '/events/'
     | '/logs/'
     | '/settings/'
     | '/api/logs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/sync/events' | '/events' | '/logs' | '/settings' | '/api/logs'
+  to:
+    | '/'
+    | '/api/sync/events'
+    | '/drizzle-sync'
+    | '/events'
+    | '/logs'
+    | '/settings'
+    | '/api/logs'
   id:
     | '__root__'
     | '/_dashboard'
     | '/_dashboard/'
     | '/api/sync/events'
+    | '/_dashboard/drizzle-sync/'
     | '/_dashboard/events/'
     | '/_dashboard/logs/'
     | '/_dashboard/settings/'
@@ -150,6 +169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEventsIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
+    '/_dashboard/drizzle-sync/': {
+      id: '/_dashboard/drizzle-sync/'
+      path: '/drizzle-sync'
+      fullPath: '/drizzle-sync/'
+      preLoaderRoute: typeof DashboardDrizzleSyncIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
     '/api/sync/events': {
       id: '/api/sync/events'
       path: '/api/sync/events'
@@ -162,6 +188,7 @@ declare module '@tanstack/react-router' {
 
 interface DashboardLayoutRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardDrizzleSyncIndexRoute: typeof DashboardDrizzleSyncIndexRoute
   DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
@@ -169,6 +196,7 @@ interface DashboardLayoutRouteChildren {
 
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardDrizzleSyncIndexRoute: DashboardDrizzleSyncIndexRoute,
   DashboardEventsIndexRoute: DashboardEventsIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,

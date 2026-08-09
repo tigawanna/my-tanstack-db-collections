@@ -13,8 +13,11 @@ import type {
 
 /** Minimal table-like shape: Drizzle tables satisfy this via `$inferSelect` / `$inferInsert`. */
 export type TableLike = {
-  $inferSelect: Record<string, unknown>;
-  $inferInsert: Record<string, unknown>;
+  // `any` keeps InferSelect/InferInsert from being widened by a Record constraint.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $inferSelect: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $inferInsert: any;
 };
 
 export type InferSelect<TTable> = TTable extends { $inferSelect: infer S } ? S : never;
