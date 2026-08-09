@@ -7,9 +7,6 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   staged: { "*": "vp check --fix" },
-  server: {
-    port: 3002,
-  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
