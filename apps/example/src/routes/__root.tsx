@@ -1,15 +1,15 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { createMiddleware } from "@tanstack/react-start";
-import { evlogErrorHandler } from "evlog/nitro/v3";
+import { EventSourcedSyncRunner } from "@/components/common/EventSourcedSyncRunner";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { EventSourcedSyncRunner } from "@/components/common/EventSourcedSyncRunner";
+import { getQueryClient } from "@/lib/tanstack/query/queryclient";
 import { ErrorPage } from "@/lib/tanstack/router/ErrorPage";
 import { RouterNotFoundComponent } from "@/lib/tanstack/router/RouterNotFoundComponent";
-import { queryClient } from "@/lib/tanstack/query/queryclient";
 import { ThemeProvider } from "@/lib/tanstack/router/theme-provider";
 import { AppConfig } from "@/utils/system";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { createMiddleware } from "@tanstack/react-start";
+import { evlogErrorHandler } from "evlog/nitro/v3";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -50,7 +50,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey={AppConfig.themeStorageKey}>
-          <QueryClientProvider client={queryClient}>
+          <QueryClientProvider client={getQueryClient()}>
             <EventSourcedSyncRunner />
             <TooltipProvider>{children}</TooltipProvider>
             <Toaster richColors closeButton />

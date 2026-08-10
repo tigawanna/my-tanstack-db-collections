@@ -14,6 +14,7 @@ import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
 import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs/index'
+import { Route as DashboardExperimentsIndexRouteImport } from './routes/_dashboard/experiments/index'
 import { Route as DashboardEventsIndexRouteImport } from './routes/_dashboard/events/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
 
@@ -41,6 +42,12 @@ const DashboardLogsIndexRoute = DashboardLogsIndexRouteImport.update({
   path: '/logs/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
+const DashboardExperimentsIndexRoute =
+  DashboardExperimentsIndexRouteImport.update({
+    id: '/experiments/',
+    path: '/experiments/',
+    getParentRoute: () => DashboardLayoutRoute,
+  } as any)
 const DashboardEventsIndexRoute = DashboardEventsIndexRouteImport.update({
   id: '/events/',
   path: '/events/',
@@ -56,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/events/': typeof DashboardEventsIndexRoute
+  '/experiments/': typeof DashboardExperimentsIndexRoute
   '/logs/': typeof DashboardLogsIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
@@ -64,6 +72,7 @@ export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/events': typeof DashboardEventsIndexRoute
+  '/experiments': typeof DashboardExperimentsIndexRoute
   '/logs': typeof DashboardLogsIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
@@ -74,6 +83,7 @@ export interface FileRoutesById {
   '/_dashboard/': typeof DashboardIndexRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/_dashboard/events/': typeof DashboardEventsIndexRoute
+  '/_dashboard/experiments/': typeof DashboardExperimentsIndexRoute
   '/_dashboard/logs/': typeof DashboardLogsIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
@@ -84,17 +94,26 @@ export interface FileRouteTypes {
     | '/'
     | '/api/sync/events'
     | '/events/'
+    | '/experiments/'
     | '/logs/'
     | '/settings/'
     | '/api/logs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/sync/events' | '/events' | '/logs' | '/settings' | '/api/logs'
+  to:
+    | '/'
+    | '/api/sync/events'
+    | '/events'
+    | '/experiments'
+    | '/logs'
+    | '/settings'
+    | '/api/logs'
   id:
     | '__root__'
     | '/_dashboard'
     | '/_dashboard/'
     | '/api/sync/events'
     | '/_dashboard/events/'
+    | '/_dashboard/experiments/'
     | '/_dashboard/logs/'
     | '/_dashboard/settings/'
     | '/api/logs/'
@@ -143,6 +162,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLogsIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
+    '/_dashboard/experiments/': {
+      id: '/_dashboard/experiments/'
+      path: '/experiments'
+      fullPath: '/experiments/'
+      preLoaderRoute: typeof DashboardExperimentsIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
     '/_dashboard/events/': {
       id: '/_dashboard/events/'
       path: '/events'
@@ -163,6 +189,7 @@ declare module '@tanstack/react-router' {
 interface DashboardLayoutRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
+  DashboardExperimentsIndexRoute: typeof DashboardExperimentsIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
@@ -170,6 +197,7 @@ interface DashboardLayoutRouteChildren {
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardEventsIndexRoute: DashboardEventsIndexRoute,
+  DashboardExperimentsIndexRoute: DashboardExperimentsIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
