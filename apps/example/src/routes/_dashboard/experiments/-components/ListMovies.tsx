@@ -1,0 +1,13 @@
+import { useLiveQuery } from "@tanstack/react-db";
+import { moviesCollection } from "./collection";
+import { MoviesTable } from "./MoviesTable";
+
+export function ListMovies() {
+  const { data, isLoading } = useLiveQuery((q) => q.from({ movies: moviesCollection }));
+
+  return (
+    <div className="w-full h-full flex flex-col gap-4">
+      <MoviesTable data={data} isLoading={isLoading} />
+    </div>
+  );
+}
