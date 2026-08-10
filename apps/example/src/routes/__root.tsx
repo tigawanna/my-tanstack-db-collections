@@ -11,6 +11,19 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { createMiddleware } from "@tanstack/react-start";
 import { evlogErrorHandler } from "evlog/nitro/v3";
 import appCss from "../styles.css?url";
+import paginationStyles from "@/components/pagination/pagination.css?url";
+import { lazy, Suspense } from "react";
+import { z } from "zod";
+
+const TanstackDevtools = lazy(() =>
+  import("@/lib/tanstack/devtools/devtools").then((module) => ({
+    default: module.TanstackDevtools,
+  })),
+);
+
+const globalSearch = z.object({
+  globalPage: z.number().optional(),
+});
 
 export const Route = createRootRoute({
   server: {
@@ -35,11 +48,16 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: appCss,
       },
+      {
+        rel: "stylesheet",
+        href: paginationStyles,
+      },
     ],
   }),
   notFoundComponent: RouterNotFoundComponent,
   errorComponent: ErrorPage,
   shellComponent: RootDocument,
+  validateSearch: globalSearch,
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -54,6 +72,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <EventSourcedSyncRunner />
             <TooltipProvider>{children}</TooltipProvider>
             <Toaster richColors closeButton />
+            <Suspense fallback={null}>
+              <TanstackDevtools />
+            </Suspense>
           </QueryClientProvider>
         </ThemeProvider>
         <Scripts />

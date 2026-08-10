@@ -1,4 +1,4 @@
-import { ListMovies } from "./ListMovies";
+import { ListMoviesInfinite } from "./ListMoviesInfinite";
 
 export function ExperimentsPage() {
   return (
@@ -7,7 +7,8 @@ export function ExperimentsPage() {
         <h1>Experiments</h1>
         <p>This is the experiments page</p>
       </div>
-      <ListMovies />
+      <ListMoviesInfinite />
+      {/* <ListMovies /> */}
     </div>
   );
 }

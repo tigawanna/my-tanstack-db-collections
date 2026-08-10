@@ -45,6 +45,7 @@ export function MoviesTable({ data, isLoading = false }: MoviesTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="pl-4">Idx</TableHead>
             <TableHead className="pl-4">Title</TableHead>
             <TableHead className="hidden md:table-cell">Description</TableHead>
             <TableHead>Rating</TableHead>
@@ -52,8 +53,8 @@ export function MoviesTable({ data, isLoading = false }: MoviesTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((movie) => (
-            <MovieRow key={movie.id} movie={movie} />
+          {data.map((movie, idx) => (
+            <MovieRow idx={idx} key={movie.id} movie={movie} />
           ))}
         </TableBody>
       </Table>
@@ -61,9 +62,10 @@ export function MoviesTable({ data, isLoading = false }: MoviesTableProps) {
   );
 }
 
-function MovieRow({ movie }: { movie: Movie }) {
+function MovieRow({ movie, idx }: { movie: Movie; idx: number }) {
   return (
     <TableRow>
+      <TableCell>{idx + 1}</TableCell>
       <TableCell className="max-w-56 pl-4 font-medium whitespace-normal">
         <span className="line-clamp-2">{movie.title}</span>
       </TableCell>
