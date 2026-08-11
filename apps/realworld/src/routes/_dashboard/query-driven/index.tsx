@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PendingComponent } from "../-components/shared/Pendng";
+import { ListQueryDrivenMovies } from "./-components/ListQueryDrivenMovies";
 
 export const Route = createFileRoute("/_dashboard/query-driven/")({
   component: RouteComponent,
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_dashboard/query-driven/")({
 function RouteComponent() {
   return (
     <div className="w-full h-full flex flex-col">
-      <h1 className="text-2xl font-bold">Query Driven</h1>
+      <ListQueryDrivenMovies />
     </div>
   );
 }
