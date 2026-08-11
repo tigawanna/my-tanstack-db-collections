@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { queryKeyPrefixes } from "@/data-access-layer/query-keys";
@@ -15,6 +15,7 @@ export function useEvlogLogsPage() {
     queryKey: [queryKeyPrefixes.logs, "dates"],
     queryFn: fetchEvlogDates,
     staleTime: 0,
+    placeholderData: keepPreviousData,
   });
 
   const activeDate = selectedDate ?? datesQuery.data?.[0] ?? "";
@@ -24,6 +25,7 @@ export function useEvlogLogsPage() {
     queryFn: () => fetchEvlogLogs({ date: activeDate, page, pageSize: PAGE_SIZE }),
     enabled: Boolean(activeDate),
     staleTime: 0,
+    placeholderData: keepPreviousData,
   });
 
   const total = logsQuery.data?.total ?? 0;
@@ -52,6 +54,7 @@ export function useEvlogLogsPage() {
     setPage,
     isLoading: datesQuery.isLoading || logsQuery.isLoading,
     isFetching: datesQuery.isFetching || logsQuery.isFetching,
+    isRefetching: datesQuery.isRefetching || logsQuery.isRefetching,
     error: datesQuery.error ?? logsQuery.error,
     refresh,
   };

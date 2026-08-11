@@ -83,6 +83,7 @@ export function LogsViewer() {
     setPage,
     isLoading,
     isFetching,
+    isRefetching,
     error,
     refresh,
   } = useEvlogLogsPage();
@@ -114,8 +115,13 @@ export function LogsViewer() {
               ))}
             </select>
           ) : null}
-          <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refresh()}>
-            <RefreshCw className={isFetching ? "animate-spin" : undefined} />
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isFetching || isRefetching}
+            onClick={() => void refresh()}
+          >
+            <RefreshCw className={isFetching || isRefetching ? "animate-spin" : undefined} />
             Refresh
           </Button>
         </div>

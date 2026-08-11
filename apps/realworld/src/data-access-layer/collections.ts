@@ -155,7 +155,7 @@ const syncHooks: EventSourcedHooks = {
 // Lazy singleton: ensureDb() opens SQLite once; db proxy forwards after init.
 const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
   databaseName: "my-app.sqlite",
-  debug: import.meta.env.DEV,
+  // debug: import.meta.env.DEV,
   clientId: getPersistedClientId(),
   collections: {
     users: {
