@@ -157,9 +157,6 @@ const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
   databaseName: "my-app.sqlite",
   debug: import.meta.env.DEV,
   clientId: getPersistedClientId(),
-
-  // Register collections here — each key becomes db.collections.<key>.
-  // indexes: optional; each entry calls collection.createIndex() at init (speeds up filters/joins).
   collections: {
     users: {
       getKey: (user: User) => user.id,
@@ -176,36 +173,19 @@ const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
     },
     settings: { getKey: (settings: AppSettings) => settings.id },
   },
-
-  // Initial default; users can toggle at runtime via Settings (app-settings.ts → setSyncEnabled).
   syncEnabled: true,
   sync: { pushEvents, pullEvents },
-
-  // Stamp payload shape version; pair with upcastEvent when you evolve row schemas.
   eventSchemaVersion: 1,
-
-  // Re-pull a few seqs on every sync. Harmless (replay is idempotent); useful if
-  // the server ever assigns sequences before commit (Postgres BIGSERIAL). Our
-  // libsql server uses BEGIN IMMEDIATE, so this is belt-and-suspenders.
   pullOverlap: 5,
-
-  // Stamp baseVersion on writes; server rejects stale edits with CONFLICT.
   conflictDetection: true,
-
-  // Permanent failures and exhausted retries land in deadletter (see Events UI).
   retry: {
     maxAttempts: 8,
     baseDelayMs: 1_000,
     maxDelayMs: 5 * 60_000,
   },
   pushBatchSize: 100,
-
-  // Recreated server DB → new backendId → reset pull cursor and re-sync from 0.
   backendMismatch: "resetCursor",
-
   hooks: syncHooks,
-
-  // Dynamic imports keep SSR bundles from loading wa-sqlite/OPFS until first ensureDb().
   load: async () => {
     const { createCollection } = await import("@tanstack/react-db");
     const {
