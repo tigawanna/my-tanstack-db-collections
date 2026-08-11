@@ -13,6 +13,7 @@ import { Route as DashboardLayoutRouteImport } from './routes/_dashboard/layout'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
+import { Route as DashboardQueryDrivenIndexRouteImport } from './routes/_dashboard/query-driven/index'
 import { Route as DashboardNaiveIndexRouteImport } from './routes/_dashboard/naive/index'
 import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs/index'
 import { Route as DashboardCustomPaginationIndexRouteImport } from './routes/_dashboard/custom-pagination/index'
@@ -38,6 +39,12 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
+const DashboardQueryDrivenIndexRoute =
+  DashboardQueryDrivenIndexRouteImport.update({
+    id: '/query-driven/',
+    path: '/query-driven/',
+    getParentRoute: () => DashboardLayoutRoute,
+  } as any)
 const DashboardNaiveIndexRoute = DashboardNaiveIndexRouteImport.update({
   id: '/naive/',
   path: '/naive/',
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/logs/': typeof DashboardLogsIndexRoute
   '/naive/': typeof DashboardNaiveIndexRoute
+  '/query-driven/': typeof DashboardQueryDrivenIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
 }
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
   '/custom-pagination': typeof DashboardCustomPaginationIndexRoute
   '/logs': typeof DashboardLogsIndexRoute
   '/naive': typeof DashboardNaiveIndexRoute
+  '/query-driven': typeof DashboardQueryDrivenIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
 }
@@ -94,6 +103,7 @@ export interface FileRoutesById {
   '/_dashboard/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/_dashboard/logs/': typeof DashboardLogsIndexRoute
   '/_dashboard/naive/': typeof DashboardNaiveIndexRoute
+  '/_dashboard/query-driven/': typeof DashboardQueryDrivenIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
 }
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/custom-pagination/'
     | '/logs/'
     | '/naive/'
+    | '/query-driven/'
     | '/settings/'
     | '/api/logs/'
   fileRoutesByTo: FileRoutesByTo
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/custom-pagination'
     | '/logs'
     | '/naive'
+    | '/query-driven'
     | '/settings'
     | '/api/logs'
   id:
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
     | '/_dashboard/custom-pagination/'
     | '/_dashboard/logs/'
     | '/_dashboard/naive/'
+    | '/_dashboard/query-driven/'
     | '/_dashboard/settings/'
     | '/api/logs/'
   fileRoutesById: FileRoutesById
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
+    '/_dashboard/query-driven/': {
+      id: '/_dashboard/query-driven/'
+      path: '/query-driven'
+      fullPath: '/query-driven/'
+      preLoaderRoute: typeof DashboardQueryDrivenIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
     '/_dashboard/naive/': {
@@ -211,6 +231,7 @@ interface DashboardLayoutRouteChildren {
   DashboardCustomPaginationIndexRoute: typeof DashboardCustomPaginationIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
   DashboardNaiveIndexRoute: typeof DashboardNaiveIndexRoute
+  DashboardQueryDrivenIndexRoute: typeof DashboardQueryDrivenIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
@@ -220,6 +241,7 @@ const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardCustomPaginationIndexRoute: DashboardCustomPaginationIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
   DashboardNaiveIndexRoute: DashboardNaiveIndexRoute,
+  DashboardQueryDrivenIndexRoute: DashboardQueryDrivenIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
 

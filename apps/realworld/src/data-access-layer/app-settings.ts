@@ -11,6 +11,7 @@ const DEFAULT_APP_SETTINGS: AppSettings = {
 };
 
 export async function ensureAppSettings(): Promise<AppSettings> {
+  // ensureDb() preloads user collections, so get() sees rows already on disk.
   const database = await ensureDb();
   const existing = database.collections.settings.get(APP_SETTINGS_ID);
 
