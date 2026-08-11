@@ -13,9 +13,11 @@ import { Route as DashboardLayoutRouteImport } from './routes/_dashboard/layout'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
-import { Route as DashboardMoviesIndexRouteImport } from './routes/_dashboard/movies/index'
+import { Route as DashboardNaiveIndexRouteImport } from './routes/_dashboard/naive/index'
 import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs/index'
+import { Route as DashboardCustomPaginationIndexRouteImport } from './routes/_dashboard/custom-pagination/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
+import { Route as DashboardNaiveInfiniteRouteImport } from './routes/_dashboard/naive/infinite'
 
 const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
   id: '/_dashboard',
@@ -36,9 +38,9 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
-const DashboardMoviesIndexRoute = DashboardMoviesIndexRouteImport.update({
-  id: '/movies/',
-  path: '/movies/',
+const DashboardNaiveIndexRoute = DashboardNaiveIndexRouteImport.update({
+  id: '/naive/',
+  path: '/naive/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
 const DashboardLogsIndexRoute = DashboardLogsIndexRouteImport.update({
@@ -46,25 +48,40 @@ const DashboardLogsIndexRoute = DashboardLogsIndexRouteImport.update({
   path: '/logs/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
+const DashboardCustomPaginationIndexRoute =
+  DashboardCustomPaginationIndexRouteImport.update({
+    id: '/custom-pagination/',
+    path: '/custom-pagination/',
+    getParentRoute: () => DashboardLayoutRoute,
+  } as any)
 const ApiSyncEventsRoute = ApiSyncEventsRouteImport.update({
   id: '/api/sync/events',
   path: '/api/sync/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardNaiveInfiniteRoute = DashboardNaiveInfiniteRouteImport.update({
+  id: '/naive/infinite',
+  path: '/naive/infinite',
+  getParentRoute: () => DashboardLayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
+  '/naive/infinite': typeof DashboardNaiveInfiniteRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
+  '/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/logs/': typeof DashboardLogsIndexRoute
-  '/movies/': typeof DashboardMoviesIndexRoute
+  '/naive/': typeof DashboardNaiveIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
+  '/naive/infinite': typeof DashboardNaiveInfiniteRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
+  '/custom-pagination': typeof DashboardCustomPaginationIndexRoute
   '/logs': typeof DashboardLogsIndexRoute
-  '/movies': typeof DashboardMoviesIndexRoute
+  '/naive': typeof DashboardNaiveIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
 }
@@ -72,9 +89,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_dashboard': typeof DashboardLayoutRouteWithChildren
   '/_dashboard/': typeof DashboardIndexRoute
+  '/_dashboard/naive/infinite': typeof DashboardNaiveInfiniteRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
+  '/_dashboard/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/_dashboard/logs/': typeof DashboardLogsIndexRoute
-  '/_dashboard/movies/': typeof DashboardMoviesIndexRoute
+  '/_dashboard/naive/': typeof DashboardNaiveIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
 }
@@ -82,20 +101,32 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/naive/infinite'
     | '/api/sync/events'
+    | '/custom-pagination/'
     | '/logs/'
-    | '/movies/'
+    | '/naive/'
     | '/settings/'
     | '/api/logs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/sync/events' | '/logs' | '/movies' | '/settings' | '/api/logs'
+  to:
+    | '/'
+    | '/naive/infinite'
+    | '/api/sync/events'
+    | '/custom-pagination'
+    | '/logs'
+    | '/naive'
+    | '/settings'
+    | '/api/logs'
   id:
     | '__root__'
     | '/_dashboard'
     | '/_dashboard/'
+    | '/_dashboard/naive/infinite'
     | '/api/sync/events'
+    | '/_dashboard/custom-pagination/'
     | '/_dashboard/logs/'
-    | '/_dashboard/movies/'
+    | '/_dashboard/naive/'
     | '/_dashboard/settings/'
     | '/api/logs/'
   fileRoutesById: FileRoutesById
@@ -136,11 +167,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
-    '/_dashboard/movies/': {
-      id: '/_dashboard/movies/'
-      path: '/movies'
-      fullPath: '/movies/'
-      preLoaderRoute: typeof DashboardMoviesIndexRouteImport
+    '/_dashboard/naive/': {
+      id: '/_dashboard/naive/'
+      path: '/naive'
+      fullPath: '/naive/'
+      preLoaderRoute: typeof DashboardNaiveIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
     '/_dashboard/logs/': {
@@ -150,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardLogsIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
+    '/_dashboard/custom-pagination/': {
+      id: '/_dashboard/custom-pagination/'
+      path: '/custom-pagination'
+      fullPath: '/custom-pagination/'
+      preLoaderRoute: typeof DashboardCustomPaginationIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
     '/api/sync/events': {
       id: '/api/sync/events'
       path: '/api/sync/events'
@@ -157,20 +195,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSyncEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/naive/infinite': {
+      id: '/_dashboard/naive/infinite'
+      path: '/naive/infinite'
+      fullPath: '/naive/infinite'
+      preLoaderRoute: typeof DashboardNaiveInfiniteRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
   }
 }
 
 interface DashboardLayoutRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardNaiveInfiniteRoute: typeof DashboardNaiveInfiniteRoute
+  DashboardCustomPaginationIndexRoute: typeof DashboardCustomPaginationIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
-  DashboardMoviesIndexRoute: typeof DashboardMoviesIndexRoute
+  DashboardNaiveIndexRoute: typeof DashboardNaiveIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardNaiveInfiniteRoute: DashboardNaiveInfiniteRoute,
+  DashboardCustomPaginationIndexRoute: DashboardCustomPaginationIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
-  DashboardMoviesIndexRoute: DashboardMoviesIndexRoute,
+  DashboardNaiveIndexRoute: DashboardNaiveIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }
 

@@ -1,6 +1,6 @@
 import { useLiveQuery } from "@tanstack/react-db";
+import { MoviesTable } from "../../-components/movies/MoviesTable";
 import { moviesCollection } from "./collection";
-import { MoviesTable } from "./MoviesTable";
 
 export function ListMovies() {
   const { data, isLoading } = useLiveQuery((q) => q.from({ movies: moviesCollection }));

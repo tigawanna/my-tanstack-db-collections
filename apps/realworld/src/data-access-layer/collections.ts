@@ -135,9 +135,10 @@ const syncHooks: EventSourcedHooks = {
     toast.error(`Sync ${phase} failed`, { description: error.message });
   },
   onDeadLetter: (entry) => {
-    toast.warning("Event moved to dead letter", {
-      description: `${entry.collectionId}/${String(entry.key)} — ${entry.message}`,
-    });
+    console.warn("Event moved to dead letter", entry);
+    // toast.warning("Event moved to dead letter", {
+    //   description: `${entry.collectionId}/${String(entry.key)} — ${entry.message}`,
+    // });
   },
   onBackendMismatch: ({ expected, received, policy }) => {
     toast.message("Sync backend changed", {

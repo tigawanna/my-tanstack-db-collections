@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useLiveInfiniteQuery } from "@tanstack/react-db";
 import { useState } from "react";
 import ResponsivePagination from "react-responsive-pagination";
+import { MoviesTable } from "../../-components/movies/MoviesTable";
 import { moviesCollection } from "./collection";
-import { MoviesTable } from "./MoviesTable";
 
 export function ListMoviesInfinite() {
   const { isLoading, fetchNextPage, pages, pageParams, hasNextPage, state } = useLiveInfiniteQuery(
