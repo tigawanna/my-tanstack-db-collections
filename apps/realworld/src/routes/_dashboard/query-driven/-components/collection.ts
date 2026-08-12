@@ -8,18 +8,23 @@ export const PAGINATED_MOVIES_COLLECTION_QUERY_KEY = "query-driven-movies";
 
 type MoviesWhereClause = {
   page?: { _eq: number };
-  q?: { _ilike: string };
+  q?: { _eq?: string; _ilike?: string };
 };
+
+function parseSearchQ(where: MoviesWhereClause | null | undefined) {
+  const raw = where?.q?._eq ?? where?.q?._ilike;
+  if (!raw) return undefined;
+  const stripped = raw.replace(/^%|%$/g, "").trim();
+  return stripped || undefined;
+}
 
 export const paginatedMoviesCollection = createCollection(
   queryCollectionOptions({
     queryKey: [PAGINATED_MOVIES_COLLECTION_QUERY_KEY],
     queryFn: async (ctx) => {
-      // const { sorts } = parseLoadSubsetOptions(ctx.meta?.loadSubsetOptions);
-      // const { asc, desc } = parseParameterizedSorts(sorts);
       const where = parseWhereWithHandlers<MoviesWhereClause>(ctx.meta?.loadSubsetOptions?.where);
       const page = where?.page?._eq ?? 1;
-      const q = where?.q?._ilike || undefined;
+      const q = parseSearchQ(where);
       const response = await getPaginatedFakeMoviesFn({
         data: { page, perPage: 10, q, includeTotal: true },
       });
@@ -31,5 +36,6 @@ export const paginatedMoviesCollection = createCollection(
     autoIndex: "eager",
     defaultIndexType: BasicIndex,
     syncMode: "on-demand",
+    staleTime: 1000 * 60 * 60,
   }),
 );

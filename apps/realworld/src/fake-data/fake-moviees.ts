@@ -1,10 +1,4 @@
-import {
-  count,
-  createCollection,
-  ilike,
-  localOnlyCollectionOptions,
-  queryOnce,
-} from "@tanstack/db";
+import { createCollection, ilike, localOnlyCollectionOptions, queryOnce } from "@tanstack/db";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import fakeMovieData from "../../public/fake-movies.json";
@@ -28,7 +22,7 @@ export const getPaginatedFakeMoviesFn = createServerFn()
       page: z.number(),
       perPage: z.number(),
       q: z.string().optional(),
-      /** When true, also returns total + totalPages over the full collection. */
+      /** When true, also returns total + totalPages over the filtered set. */
       includeTotal: z.boolean().optional(),
     }),
   )
@@ -39,38 +33,35 @@ export const getPaginatedFakeMoviesFn = createServerFn()
     const stamp = <T extends object>(item: T) => ({ ...item, page, q });
 
     const itemsPromise = queryOnce((qb) => {
-      let innerQ = qb
+      const base = qb
         .from({ movies: fakeMovieCollection })
         .orderBy(({ movies }) => movies.rating, "desc");
-      if (q) {
-        innerQ = innerQ.where(({ movies }) => ilike(movies.title, `%${q}%`));
-      }
-      return innerQ.limit(perPage).offset((page - 1) * perPage);
+      const filtered = q ? base.where(({ movies }) => ilike(movies.title, `%${q}%`)) : base;
+      return filtered.limit(perPage).offset((page - 1) * perPage);
     });
 
     if (!includeTotal) {
-      return { items: (await itemsPromise).map(stamp) };
+      return { page, perPage, q, items: (await itemsPromise).map(stamp) };
     }
 
-    const [items, totals] = await Promise.all([
+    // Count matching rows with the same filter as the page query so pagination
+    // reflects the active search (not the full collection).
+    const [items, matchingIds] = await Promise.all([
       itemsPromise,
       queryOnce((qb) => {
-        let countQ = qb.from({ movies: fakeMovieCollection });
-        if (q) {
-          countQ = countQ.where(({ movies }) => ilike(movies.title, `%${q}%`));
-        }
-        return countQ.select(({ movies }) => ({
-          total: count(movies.id),
-        }));
+        const base = qb.from({ movies: fakeMovieCollection });
+        const filtered = q ? base.where(({ movies }) => ilike(movies.title, `%${q}%`)) : base;
+        return filtered.select(({ movies }) => ({ id: movies.id }));
       }),
     ]);
 
-    const totalItems = totals[0]?.total ?? 0;
+    const totalItems = matchingIds.length;
     const totalPages = perPage > 0 ? Math.ceil(totalItems / perPage) : 0;
 
     return {
       page,
       perPage,
+      q,
       items: items.map(stamp),
       totalItems,
       totalPages,
