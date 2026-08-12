@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -8,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Star } from "lucide-react";
+import { Bookmark, BookmarkCheck, Star } from "lucide-react";
 
 export type Movie = {
   id: string;
@@ -17,16 +18,19 @@ export type Movie = {
   image: string;
   rating: number;
   releaseDate: string;
+  watchlistId?: string | null;
+  onWatchlist?: boolean;
 };
 
 type MoviesTableProps = {
   data: Movie[] | undefined;
   isLoading?: boolean;
+  onToggleWatchlist?: (movie: Movie) => void;
 };
 
-export function MoviesTable({ data, isLoading = false }: MoviesTableProps) {
+export function MoviesTable({ data, isLoading = false, onToggleWatchlist }: MoviesTableProps) {
   if (isLoading) {
-    return <MoviesTableSkeleton />;
+    return <MoviesTableSkeleton showWatchlist={Boolean(onToggleWatchlist)} />;
   }
 
   if (!data || data.length === 0) {
@@ -49,12 +53,20 @@ export function MoviesTable({ data, isLoading = false }: MoviesTableProps) {
             <TableHead className="pl-4">Title</TableHead>
             <TableHead className="hidden md:table-cell">Description</TableHead>
             <TableHead>Rating</TableHead>
-            <TableHead className="pr-4">Released</TableHead>
+            <TableHead className={onToggleWatchlist ? undefined : "pr-4"}>Released</TableHead>
+            {onToggleWatchlist ? (
+              <TableHead className="pr-4 text-right">Watchlist</TableHead>
+            ) : null}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((movie, idx) => (
-            <MovieRow idx={idx} key={movie.id} movie={movie} />
+            <MovieRow
+              idx={idx}
+              key={movie.id}
+              movie={movie}
+              onToggleWatchlist={onToggleWatchlist}
+            />
           ))}
         </TableBody>
       </Table>
@@ -62,7 +74,15 @@ export function MoviesTable({ data, isLoading = false }: MoviesTableProps) {
   );
 }
 
-function MovieRow({ movie, idx }: { movie: Movie; idx: number }) {
+function MovieRow({
+  movie,
+  idx,
+  onToggleWatchlist,
+}: {
+  movie: Movie;
+  idx: number;
+  onToggleWatchlist?: (movie: Movie) => void;
+}) {
   return (
     <TableRow>
       <TableCell>{idx + 1}</TableCell>
@@ -78,14 +98,30 @@ function MovieRow({ movie, idx }: { movie: Movie; idx: number }) {
           {movie.rating}/5
         </span>
       </TableCell>
-      <TableCell className="text-muted-foreground pr-4 tabular-nums">
+      <TableCell
+        className={`text-muted-foreground tabular-nums ${onToggleWatchlist ? "" : "pr-4"}`}
+      >
         {formatReleaseDate(movie.releaseDate)}
       </TableCell>
+      {onToggleWatchlist ? (
+        <TableCell className="pr-4 text-right">
+          <Button
+            type="button"
+            size="sm"
+            variant={movie.onWatchlist ? "secondary" : "outline"}
+            onClick={() => onToggleWatchlist(movie)}
+            aria-label={movie.onWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+          >
+            {movie.onWatchlist ? <BookmarkCheck /> : <Bookmark />}
+            {movie.onWatchlist ? "Saved" : "Add"}
+          </Button>
+        </TableCell>
+      ) : null}
     </TableRow>
   );
 }
 
-function MoviesTableSkeleton() {
+function MoviesTableSkeleton({ showWatchlist }: { showWatchlist?: boolean }) {
   return (
     <div className="bg-card rounded-xl border">
       <Table>
@@ -94,7 +130,8 @@ function MoviesTableSkeleton() {
             <TableHead className="pl-4">Title</TableHead>
             <TableHead className="hidden md:table-cell">Description</TableHead>
             <TableHead>Rating</TableHead>
-            <TableHead className="pr-4">Released</TableHead>
+            <TableHead className={showWatchlist ? undefined : "pr-4"}>Released</TableHead>
+            {showWatchlist ? <TableHead className="pr-4 text-right">Watchlist</TableHead> : null}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -109,9 +146,14 @@ function MoviesTableSkeleton() {
               <TableCell>
                 <Skeleton className="h-4 w-12" />
               </TableCell>
-              <TableCell className="pr-4">
+              <TableCell className={showWatchlist ? undefined : "pr-4"}>
                 <Skeleton className="h-4 w-24" />
               </TableCell>
+              {showWatchlist ? (
+                <TableCell className="pr-4">
+                  <Skeleton className="ml-auto h-8 w-16" />
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

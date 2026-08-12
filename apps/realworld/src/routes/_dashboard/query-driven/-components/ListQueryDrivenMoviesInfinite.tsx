@@ -3,12 +3,14 @@ import { useLiveInfiniteQuery } from "@tanstack/react-db";
 import { useState } from "react";
 import ResponsivePagination from "react-responsive-pagination";
 import { MoviesTable } from "../../-components/movies/MoviesTable";
-import { paginatedMoviesCollection } from "./collection";
+import { queryDrivenMoviesCollection } from "./query-driven-collection";
 
 export function ListQueryDrivenMoviesInfinite() {
   const { isLoading, fetchNextPage, pages, pageParams, hasNextPage } = useLiveInfiniteQuery(
     (q) =>
-      q.from({ movies: paginatedMoviesCollection }).orderBy(({ movies }) => movies.rating, "desc"),
+      q
+        .from({ movies: queryDrivenMoviesCollection })
+        .orderBy(({ movies }) => movies.rating, "desc"),
     {
       initialPageParam: 0,
       pageSize: 200,

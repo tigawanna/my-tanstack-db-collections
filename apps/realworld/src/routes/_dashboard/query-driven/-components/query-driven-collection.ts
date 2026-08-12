@@ -1,3 +1,10 @@
+import {
+  addFakeWatchlistFn,
+  fakeWatchlistSchema,
+  getFakeWatchlistFn,
+  removeFakeWatchlistFn,
+  type FakeWatchlistItem,
+} from "@/fake-data/fake-atchlist";
 import { getPaginatedFakeMoviesFn } from "@/fake-data/fake-moviees";
 import { resolveSortOrder } from "@/lib/tanstack/db/pagination";
 import { parseWhereWithHandlers } from "@/lib/tanstack/db/utils";
@@ -6,6 +13,7 @@ import { BasicIndex, createCollection, parseLoadSubsetOptions } from "@tanstack/
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 
 export const PAGINATED_MOVIES_COLLECTION_QUERY_KEY = "query-driven-movies";
+export const WATCHLIST_COLLECTION_QUERY_KEY = "query-driven-watchlist";
 
 const MOVIE_SORT_KEYS = ["title", "description", "rating", "releaseDate"] as const;
 
@@ -21,7 +29,7 @@ function parseSearchQ(where: MoviesWhereClause | null | undefined) {
   return stripped || undefined;
 }
 
-export const paginatedMoviesCollection = createCollection(
+export const queryDrivenMoviesCollection = createCollection(
   queryCollectionOptions({
     queryKey: [PAGINATED_MOVIES_COLLECTION_QUERY_KEY],
     queryFn: async (ctx) => {
@@ -49,5 +57,38 @@ export const paginatedMoviesCollection = createCollection(
     defaultIndexType: BasicIndex,
     syncMode: "on-demand",
     staleTime: 1000 * 60 * 60,
+  }),
+);
+
+export const queryDrivenWatchlistCollection = createCollection(
+  queryCollectionOptions({
+    queryKey: [WATCHLIST_COLLECTION_QUERY_KEY],
+    queryFn: async () => getFakeWatchlistFn(),
+    queryClient: getQueryClient(),
+    schema: fakeWatchlistSchema,
+    getKey: (item) => item.id,
+    autoIndex: "eager",
+    defaultIndexType: BasicIndex,
+    staleTime: 1000 * 60 * 60,
+    onInsert: async ({ transaction }) => {
+      await Promise.all(
+        transaction.mutations.map((mutation) =>
+          addFakeWatchlistFn({
+            data: {
+              id: mutation.modified.id,
+              movieId: mutation.modified.movieId,
+              createdAt: mutation.modified.createdAt,
+            } satisfies FakeWatchlistItem,
+          }),
+        ),
+      );
+    },
+    onDelete: async ({ transaction }) => {
+      await Promise.all(
+        transaction.mutations.map((mutation) =>
+          removeFakeWatchlistFn({ data: { id: String(mutation.key) } }),
+        ),
+      );
+    },
   }),
 );
