@@ -1,14 +1,28 @@
 import { getPaginatedFakeMoviesFn } from "@/fake-data/fake-moviees";
+import { parseParameterizedSorts, parseWhereWithHandlers } from "@/lib/tanstack/db/utils";
 import { getQueryClient } from "@/lib/tanstack/query/queryclient";
-import { BasicIndex, createCollection } from "@tanstack/db";
+import { BasicIndex, createCollection, parseLoadSubsetOptions } from "@tanstack/db";
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 
 export const PAGINATED_MOVIES_COLLECTION_QUERY_KEY = "query-driven-movies";
 
+// type UsersWhereClause = {
+//   page?: { _eq: number };
+//   _and?: UsersWhereClause[];
+// };
 export const paginatedMoviesCollection = createCollection(
   queryCollectionOptions({
     queryKey: [PAGINATED_MOVIES_COLLECTION_QUERY_KEY],
     queryFn: async (ctx) => {
+      const { sorts } = parseLoadSubsetOptions(ctx.meta?.loadSubsetOptions);
+      const { asc, desc } = parseParameterizedSorts(sorts);
+      const where = parseWhereWithHandlers(ctx.meta?.loadSubsetOptions?.where);
+
+      console.log("=== where ===  ", where);
+      console.log("=== sorts ===  ", sorts);
+      console.log("=== asc ===  ", asc);
+      console.log("=== desc ===  ", desc);
+
       const response = await getPaginatedFakeMoviesFn({
         data: { page: 1, perPage: 10, includeTotal: true },
       });

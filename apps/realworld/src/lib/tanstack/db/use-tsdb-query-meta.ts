@@ -2,10 +2,10 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export type MetaObject<T> = {
   items: T[];
-  page?: number;
-  perPage?: number;
-  totalItems?: number;
-  totalPages?: number;
+  page?: number | undefined;
+  perPage?: number | undefined;
+  totalItems?: number | undefined;
+  totalPages?: number | undefined;
 };
 
 export type DBQueryMetaObject<T> = {
@@ -17,9 +17,7 @@ export function useTSDBQueryMeta(queryKey: string) {
   const qc = useQueryClient();
   const queriesData = qc.getQueriesData({ queryKey: [queryKey] });
 
-  console.log("=== queryKey,queriesData ===  ", queryKey, queriesData);
   const metaObject = parseAndFindMetaObject(queriesData, queryKey);
-  console.log("metaObject ===  ", metaObject);
   return metaObject;
 }
 
@@ -34,8 +32,13 @@ export function parseAndFindMetaObject<T extends unknown[]>(
     // && "page" in data
     // && "perPage" in data
   });
+  if (!metaObject)
+    return {
+      queryKey: undefined,
+      meta: undefined,
+    };
   return {
     queryKey: metaObject?.[0],
     meta: metaObject?.[1],
-  } as DBQueryMetaObject<T> | undefined;
+  } as DBQueryMetaObject<T>;
 }

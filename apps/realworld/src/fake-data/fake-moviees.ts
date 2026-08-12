@@ -40,7 +40,7 @@ export const getPaginatedFakeMoviesFn = createServerFn()
     });
 
     if (!includeTotal) {
-      return { items: await itemsPromise };
+      return { items: (await itemsPromise).map((item) => ({ ...item, page: page })) };
     }
 
     // Count every item in the collection (not the search filter) so page
@@ -60,7 +60,7 @@ export const getPaginatedFakeMoviesFn = createServerFn()
     return {
       page,
       perPage,
-      items,
+      items: items.map((item) => ({ ...item, page: page })),
       totalItems,
       totalPages: totalPages,
     };
