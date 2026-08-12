@@ -19,8 +19,30 @@ import { CollectionColumns, ColumnConfig } from "./sortable-columns";
  * These components provide a UI for sorting TanStack DB collections by different columns.
  * They integrate with TanStack Router's search params to persist sort preferences in the URL.
  *
+ * **Prerequisite:** Your route must declare `sortBy` and `sortDirection` in `validateSearch`.
+ * Without those search params, the Sort UI cannot read or write sort state in the URL.
+ *
  * @template TCollection - The TanStack DB Collection type (used for type inference)
  * @template TColumns - The column names from the collection (auto-inferred from TCollection)
+ *
+ * @example Copy into your route file — required search params
+ * ```tsx
+ * import { createFileRoute } from "@tanstack/react-router";
+ * import { z } from "zod";
+ *
+ * const searchParams = z.object({
+ *   q: z.string().optional(),
+ *   page: z.number().optional(),
+ *   // Required for TanstackDBColumnFilters / TanstackDBSortSelect:
+ *   sortBy: z.string().optional().default("createdAt"),
+ *   sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
+ * });
+ *
+ * export const Route = createFileRoute("/_dashboard/items/")({
+ *   validateSearch: searchParams,
+ *   component: RouteComponent,
+ * });
+ * ```
  */
 interface TanstackDBColumnFiltersProps<
   TCollection extends Collection<any, any>,
@@ -70,27 +92,27 @@ interface TanstackDBColumnFiltersProps<
   /**
    * Current route search parameters.
    *
-   * This object should contain at least `sortBy` and `sortDirection` keys from your route's
-   * validated search params. The component reads these to know what's currently selected,
-   * and updates them when the user changes the sort settings.
+   * Must include `sortBy` and `sortDirection` from your route's `validateSearch`.
+   * The component reads these for the current selection and writes them when the user
+   * changes sort. Other keys are preserved.
    *
-   * The object can contain other keys - they won't be modified by the component.
-   *
-   * @example
+   * @example Copy into your route file — required search params
    * ```tsx
-   * // In your route file:
-   * export const Route = createFileRoute("/dashboard/organizations/")({
-   *   validateSearch: z.object({
-   *     sortBy: z.string().optional(),
-   *     sortDirection: z.enum(["asc", "desc"]).optional(),
-   *     sq: z.string().optional(), // search query
-   *     offset: z.number().optional(),
-   *   }),
+   * import { createFileRoute } from "@tanstack/react-router";
+   * import { z } from "zod";
+   *
+   * const searchParams = z.object({
+   *   q: z.string().optional(),
+   *   page: z.number().optional(),
+   *   // Required for this component:
+   *   sortBy: z.string().optional().default("createdAt"),
+   *   sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
    * });
    *
-   * // In your component:
-   * const search = useSearch({ from: "/dashboard/organizations/" });
-   * <TanstackDBColumnFilters search={search} />
+   * export const Route = createFileRoute("/_dashboard/items/")({
+   *   validateSearch: searchParams,
+   *   component: RouteComponent,
+   * });
    * ```
    */
   search: {
@@ -151,6 +173,9 @@ interface TanstackDBColumnFiltersProps<
  * plus a button to toggle between ascending and descending order. It's best for detailed/admin
  * interfaces where you have space for an extra button.
  *
+ * **Required:** Your route must include `sortBy` and `sortDirection` in `validateSearch`.
+ * This component only reads/writes those URL search params — it does not keep local sort state.
+ *
  * How it works:
  * 1. User clicks the "Sort" button to open a popover
  * 2. A dropdown shows available columns (from sortableColumns)
@@ -158,13 +183,29 @@ interface TanstackDBColumnFiltersProps<
  * 4. A toggle button changes between ascending/descending
  * 5. URL updates trigger data re-fetch with new sort order applied
  *
- * The component reads the current sort choice from the `search` object and updates it when
- * the user makes a change. All state is stored in the URL, not in component state.
- *
  * @template TCollection - The TanStack DB Collection type (for type inference)
  * @template TColumns - Available column names (auto-inferred from collection)
  *
- * @example
+ * @example Copy into your route file — required search params
+ * ```tsx
+ * import { createFileRoute } from "@tanstack/react-router";
+ * import { z } from "zod";
+ *
+ * const searchParams = z.object({
+ *   q: z.string().optional(),
+ *   page: z.number().optional(),
+ *   // Required for TanstackDBColumnFilters:
+ *   sortBy: z.string().optional().default("createdAt"),
+ *   sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
+ * });
+ *
+ * export const Route = createFileRoute("/_dashboard/items/")({
+ *   validateSearch: searchParams,
+ *   component: RouteComponent,
+ * });
+ * ```
+ *
+ * @example Full usage (columns + UI + live query)
  * ```tsx
  * import { useNavigate, useSearch } from "@tanstack/react-router";
  * import { TanstackDBColumnFilters } from "@/lib/tanstack/db/TanstackDBColumnfilters";
@@ -255,18 +296,19 @@ export function TanstackDBColumnFilters<
   );
 
   // Called when user selects a different column from the dropdown
-  // Resets offset to 0 to start from the first page with new sort order
+  // Resets page/offset so pagination starts from the first page with the new sort
   const handleSortByChange = (value: string) => {
-    setSearch({ sortBy: value, offset: 0 });
+    setSearch({ sortBy: value, page: undefined, offset: 0 });
   };
 
   // Called when user clicks the direction toggle button
   // Flips between ascending and descending order
-  // Also resets offset to 0 to start from the first page
+  // Also resets page/offset to start from the first page
   const handleSortDirectionToggle = () => {
     setSearch({
       sortDirection: currentSortDirection === "asc" ? "desc" : "asc",
-      offset: 0, // Reset pagination when sort changes
+      page: undefined,
+      offset: 0,
     });
   };
 
@@ -333,6 +375,9 @@ export function TanstackDBColumnFilters<
  * in a more compact form: a select dropdown for choosing the column + a small icon button
  * to toggle direction. Use this when space is limited, such as in data table toolbars.
  *
+ * **Required:** Your route must include `sortBy` and `sortDirection` in `validateSearch`.
+ * Same URL search-param contract as {@link TanstackDBColumnFilters}.
+ *
  * How it works:
  * 1. User selects a column from the dropdown (immediately updates URL)
  * 2. User clicks the icon button to toggle direction
@@ -340,6 +385,25 @@ export function TanstackDBColumnFilters<
  *
  * @template TCollection - The TanStack DB Collection type (for type inference)
  * @template TColumns - Available column names (auto-inferred from collection)
+ *
+ * @example Copy into your route file — required search params
+ * ```tsx
+ * import { createFileRoute } from "@tanstack/react-router";
+ * import { z } from "zod";
+ *
+ * const searchParams = z.object({
+ *   q: z.string().optional(),
+ *   page: z.number().optional(),
+ *   // Required for TanstackDBSortSelect:
+ *   sortBy: z.string().optional().default("createdAt"),
+ *   sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
+ * });
+ *
+ * export const Route = createFileRoute("/_dashboard/items/")({
+ *   validateSearch: searchParams,
+ *   component: RouteComponent,
+ * });
+ * ```
  *
  * @example
  * ```tsx
@@ -395,7 +459,7 @@ export function TanstackDBSortSelect<
       {/* Column selector dropdown */}
       <Select
         value={currentSortBy}
-        onValueChange={(value) => setSearch({ sortBy: value, offset: 0 })}
+        onValueChange={(value) => setSearch({ sortBy: value, page: undefined, offset: 0 })}
       >
         <SelectTrigger className="h-9 w-35">
           <SelectValue placeholder="Sort by" />
@@ -417,6 +481,7 @@ export function TanstackDBSortSelect<
         onClick={() =>
           setSearch({
             sortDirection: currentSortDirection === "asc" ? "desc" : "asc",
+            page: undefined,
             offset: 0,
           })
         }

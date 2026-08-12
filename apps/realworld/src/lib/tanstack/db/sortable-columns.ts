@@ -72,12 +72,36 @@ export interface ColumnConfig<TColumn extends string> {
  * TypeScript will give you an error if you try to specify a column that doesn't exist in your schema.
  * This prevents runtime errors from trying to sort on non-existent columns.
  *
+ * **Required route search params:** Pair this with `TanstackDBColumnFilters` /
+ * `TanstackDBSortSelect`. Those components read and write `sortBy` and `sortDirection`
+ * in the URL. Your route's `validateSearch` must declare them (or sorting will not
+ * persist / type-check correctly).
+ *
  * @template TCollection - The TanStack DB Collection type
  * @template TColumns - The column names from the collection schema (auto-inferred)
  *
  * @param _collection - The TanStack DB collection (used only for type inference, not used at runtime)
  * @param columns - Array of column configurations to make sortable
  * @returns The same columns array, now with guaranteed type safety
+ *
+ * @example Copy into your route file — required search params for sort UI
+ * ```tsx
+ * import { createFileRoute } from "@tanstack/react-router";
+ * import { z } from "zod";
+ *
+ * const searchParams = z.object({
+ *   q: z.string().optional(),
+ *   page: z.number().optional(),
+ *   // Required for TanstackDBColumnFilters / TanstackDBSortSelect:
+ *   sortBy: z.string().optional().default("createdAt"),
+ *   sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
+ * });
+ *
+ * export const Route = createFileRoute("/_dashboard/items/")({
+ *   validateSearch: searchParams,
+ *   component: RouteComponent,
+ * });
+ * ```
  *
  * @example
  * ```tsx

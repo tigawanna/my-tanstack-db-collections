@@ -7,6 +7,8 @@ const searchParams = z.object({
   q: z.string().optional(),
   page: z.number().optional(),
   perPage: z.number().optional(),
+  sortBy: z.string().optional().default("rating"),
+  sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
 });
 
 export const Route = createFileRoute("/_dashboard/query-driven/")({

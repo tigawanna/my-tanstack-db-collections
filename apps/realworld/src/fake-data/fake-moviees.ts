@@ -16,12 +16,17 @@ export const getFakeMoviesFn = createServerFn().handler(async () => {
   return await queryOnce((q) => q.from({ movies: fakeMovieCollection }));
 });
 
+const MOVIE_SORT_KEYS = ["title", "description", "rating", "releaseDate"] as const;
+type MovieSortKey = (typeof MOVIE_SORT_KEYS)[number];
+
 export const getPaginatedFakeMoviesFn = createServerFn()
   .inputValidator(
     z.object({
       page: z.number(),
       perPage: z.number(),
       q: z.string().optional(),
+      sortBy: z.enum(MOVIE_SORT_KEYS).optional(),
+      sortDirection: z.enum(["asc", "desc"]).optional(),
       /** When true, also returns total + totalPages over the filtered set. */
       includeTotal: z.boolean().optional(),
     }),
@@ -29,13 +34,15 @@ export const getPaginatedFakeMoviesFn = createServerFn()
   .handler(async ({ data }) => {
     const { page, perPage, q: search, includeTotal } = data;
     const q = search?.trim() ?? "";
+    const sortBy: MovieSortKey = data.sortBy ?? "rating";
+    const sortDirection = data.sortDirection ?? "desc";
 
     const stamp = <T extends object>(item: T) => ({ ...item, page, q });
 
     const itemsPromise = queryOnce((qb) => {
       const base = qb
         .from({ movies: fakeMovieCollection })
-        .orderBy(({ movies }) => movies.rating, "desc");
+        .orderBy(({ movies }) => movies[sortBy], sortDirection);
       const filtered = q ? base.where(({ movies }) => ilike(movies.title, `%${q}%`)) : base;
       return filtered.limit(perPage).offset((page - 1) * perPage);
     });
