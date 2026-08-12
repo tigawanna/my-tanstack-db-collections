@@ -2,7 +2,7 @@ import { EventSourcedSyncRunner } from "@/components/common/EventSourcedSyncRunn
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getQueryClient } from "@/lib/tanstack/query/queryclient";
-import { ErrorPage } from "@/lib/tanstack/router/ErrorPage";
+import { RouterErrorComponent } from "@/lib/tanstack/router/RouterErrorComponent";
 import { RouterNotFoundComponent } from "@/lib/tanstack/router/RouterNotFoundComponent";
 import { ThemeProvider } from "@/lib/tanstack/router/theme-provider";
 import { AppConfig } from "@/utils/system";
@@ -55,7 +55,7 @@ export const Route = createRootRoute({
     ],
   }),
   notFoundComponent: RouterNotFoundComponent,
-  errorComponent: ErrorPage,
+  errorComponent: RouterErrorComponent,
   shellComponent: RootDocument,
   validateSearch: globalSearch,
 });
