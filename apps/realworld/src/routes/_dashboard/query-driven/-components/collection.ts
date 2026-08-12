@@ -19,7 +19,7 @@ export const paginatedMoviesCollection = createCollection(
       // const { asc, desc } = parseParameterizedSorts(sorts);
       const where = parseWhereWithHandlers<MoviesWhereClause>(ctx.meta?.loadSubsetOptions?.where);
       const page = where?.page?._eq ?? 1;
-      const q = where?.q?._ilike ?? undefined;
+      const q = where?.q?._ilike || undefined;
       const response = await getPaginatedFakeMoviesFn({
         data: { page, perPage: 10, q, includeTotal: true },
       });

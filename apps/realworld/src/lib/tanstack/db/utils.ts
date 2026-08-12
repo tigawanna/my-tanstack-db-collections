@@ -55,6 +55,7 @@ export type WhereClause = {
  * domain-specific clause (e.g. `{ page?: { _eq: number } }`).
  *
  * - `eq` → `{ [fieldPath]: { _eq: value } }` (paths joined with `_`)
+ * - `like` / `ilike` → `{ [fieldPath]: { _like|_ilike: value } }`
  * - `and` / `or` → conditions merged flat at the top level
  *
  * @param whereExpression - Where clause from `ctx.meta?.loadSubsetOptions`
@@ -64,6 +65,7 @@ export type WhereClause = {
  * ```ts
  * type UsersWhereClause = {
  *   page?: { _eq: number };
+ *   q?: { _ilike: string };
  *   _and?: UsersWhereClause[];
  * };
  *
@@ -72,6 +74,7 @@ export type WhereClause = {
  * );
  *
  * const page = (where?.page?._eq as number) || 1;
+ * const q = where?.q?._ilike || undefined;
  * ```
  */
 export function parseWhereWithHandlers<T extends WhereClause>(
@@ -81,6 +84,10 @@ export function parseWhereWithHandlers<T extends WhereClause>(
     handlers: {
       // @ts-expect-error it's all good man
       eq: (field, value) => ({ [field.join("_")]: { _eq: value } }),
+      // @ts-expect-error it's all good man
+      like: (field, value) => ({ [field.join("_")]: { _like: value } }),
+      // @ts-expect-error it's all good man
+      ilike: (field, value) => ({ [field.join("_")]: { _ilike: value } }),
       and: (...conditions) => {
         // Hoist nested conditions to top level by merging them
         return conditions.reduce((acc, condition) => {

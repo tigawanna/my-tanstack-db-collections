@@ -22,7 +22,7 @@ export function ListQueryDrivenMovies() {
     (qb) =>
       qb
         .from({ movies: paginatedMoviesCollection })
-        .where(({ movies }) => and(eq(movies.page, page), ilike(movies.q, q)))
+        .where(({ movies }) => and(eq(movies.page, page), ilike(movies.q, `%${q}%`)))
         .orderBy(({ movies }) => movies.rating, "desc"),
     [page, q],
   );
