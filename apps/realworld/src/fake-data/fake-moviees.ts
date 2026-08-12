@@ -1,4 +1,10 @@
-import { count, createCollection, eq, localOnlyCollectionOptions, queryOnce } from "@tanstack/db";
+import {
+  count,
+  createCollection,
+  ilike,
+  localOnlyCollectionOptions,
+  queryOnce,
+} from "@tanstack/db";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import fakeMovieData from "../../public/fake-movies.json";
@@ -28,30 +34,35 @@ export const getPaginatedFakeMoviesFn = createServerFn()
   )
   .handler(async ({ data }) => {
     const { page, perPage, q: search, includeTotal } = data;
+    const q = search?.trim() ?? "";
+
+    const stamp = <T extends object>(item: T) => ({ ...item, page, q });
 
     const itemsPromise = queryOnce((qb) => {
       let innerQ = qb
         .from({ movies: fakeMovieCollection })
         .orderBy(({ movies }) => movies.rating, "desc");
-      if (search) {
-        innerQ = innerQ.where(({ movies }) => eq(movies.title, search));
+      if (q) {
+        innerQ = innerQ.where(({ movies }) => ilike(movies.title, `%${q}%`));
       }
       return innerQ.limit(perPage).offset((page - 1) * perPage);
     });
 
     if (!includeTotal) {
-      return { items: (await itemsPromise).map((item) => ({ ...item, page: page })) };
+      return { items: (await itemsPromise).map(stamp) };
     }
 
-    // Count every item in the collection (not the search filter) so page
-    // counts reflect the full dataset.
     const [items, totals] = await Promise.all([
       itemsPromise,
-      queryOnce((qb) =>
-        qb.from({ movies: fakeMovieCollection }).select(({ movies }) => ({
+      queryOnce((qb) => {
+        let countQ = qb.from({ movies: fakeMovieCollection });
+        if (q) {
+          countQ = countQ.where(({ movies }) => ilike(movies.title, `%${q}%`));
+        }
+        return countQ.select(({ movies }) => ({
           total: count(movies.id),
-        })),
-      ),
+        }));
+      }),
     ]);
 
     const totalItems = totals[0]?.total ?? 0;
@@ -60,8 +71,8 @@ export const getPaginatedFakeMoviesFn = createServerFn()
     return {
       page,
       perPage,
-      items: items.map((item) => ({ ...item, page: page })),
+      items: items.map(stamp),
       totalItems,
-      totalPages: totalPages,
+      totalPages,
     };
   });

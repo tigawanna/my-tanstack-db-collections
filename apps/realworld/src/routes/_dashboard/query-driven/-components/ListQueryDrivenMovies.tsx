@@ -1,45 +1,55 @@
+import { SearchBox } from "@/components/common/SearchBox";
 import { TSRListPagination } from "@/components/pagination/TSRListPagination";
 import { useTSDBQueryMeta } from "@/lib/tanstack/db/use-tsdb-query-meta";
-import { useLiveQuery, eq } from "@tanstack/react-db";
-import { useQuery } from "@tanstack/react-query";
+import { and, eq, ilike, useLiveQuery } from "@tanstack/react-db";
+import { getRouteApi } from "@tanstack/react-router";
+import { useTransition } from "react";
 import { MoviesTable } from "../../-components/movies/MoviesTable";
 import { PAGINATED_MOVIES_COLLECTION_QUERY_KEY, paginatedMoviesCollection } from "./collection";
-import { useSearch } from "@tanstack/react-router";
 
 const ROUTE_ID = "/_dashboard/query-driven/";
+const routeApi = getRouteApi(ROUTE_ID);
 
 export function ListQueryDrivenMovies() {
-  const searchParams = useSearch({ from: ROUTE_ID });
-
-  const q = useQuery({
-    queryKey: [PAGINATED_MOVIES_COLLECTION_QUERY_KEY + "kirk"],
-    queryFn: () => {
-      return {
-        data: {
-          items: [],
-          totalItems: 666,
-          totalPages: 666,
-          page: 666,
-          perPage: 666,
-        },
-      };
-    },
-  });
+  const searchParams = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const [isPending, startTransition] = useTransition();
 
   const page = searchParams.page ?? 1;
+  const q = searchParams.q ?? "";
 
   const { data, isLoading } = useLiveQuery(
-    (q) =>
-      q
+    (qb) =>
+      qb
         .from({ movies: paginatedMoviesCollection })
-        .where(({ movies }) => eq(movies.page, page))
+        .where(({ movies }) => and(eq(movies.page, page), ilike(movies.q, q)))
         .orderBy(({ movies }) => movies.rating, "desc"),
-    [page],
+    [page, q],
   );
   const { meta } = useTSDBQueryMeta(PAGINATED_MOVIES_COLLECTION_QUERY_KEY);
 
+  function setSearchQuery(value: string) {
+    startTransition(() => {
+      void navigate({
+        search: (prev) => ({
+          ...prev,
+          q: value || undefined,
+          page: undefined,
+        }),
+        replace: true,
+      });
+    });
+  }
+
   return (
     <div className="w-full h-full flex flex-col gap-4">
+      <SearchBox
+        value={q}
+        onValueChange={setSearchQuery}
+        isPending={isPending || isLoading}
+        placeholder="Search movies by title..."
+        className="max-w-md"
+      />
       <MoviesTable data={data} isLoading={isLoading} />
       {meta?.totalPages ? (
         <TSRListPagination
