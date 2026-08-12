@@ -26,11 +26,15 @@ export function ListQueryDrivenMovies() {
     },
   });
 
-  const { data, isLoading } = useLiveQuery((q) =>
-    q
-      .from({ movies: paginatedMoviesCollection })
-      .where(({ movies }) => eq(movies.page, searchParams.page))
-      .orderBy(({ movies }) => movies.rating, "desc"),
+  const page = searchParams.page ?? 1;
+
+  const { data, isLoading } = useLiveQuery(
+    (q) =>
+      q
+        .from({ movies: paginatedMoviesCollection })
+        .where(({ movies }) => eq(movies.page, page))
+        .orderBy(({ movies }) => movies.rating, "desc"),
+    [page],
   );
   const { meta } = useTSDBQueryMeta(PAGINATED_MOVIES_COLLECTION_QUERY_KEY);
 

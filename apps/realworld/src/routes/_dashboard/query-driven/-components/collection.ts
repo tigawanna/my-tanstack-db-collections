@@ -16,15 +16,18 @@ export const paginatedMoviesCollection = createCollection(
     queryFn: async (ctx) => {
       const { sorts } = parseLoadSubsetOptions(ctx.meta?.loadSubsetOptions);
       const { asc, desc } = parseParameterizedSorts(sorts);
-      const where = parseWhereWithHandlers(ctx.meta?.loadSubsetOptions?.where);
+      const where = parseWhereWithHandlers<{ page?: { _eq: number } }>(
+        ctx.meta?.loadSubsetOptions?.where,
+      );
 
       console.log("=== where ===  ", where);
       console.log("=== sorts ===  ", sorts);
       console.log("=== asc ===  ", asc);
       console.log("=== desc ===  ", desc);
 
+      const page = where?.page?._eq ?? 1;
       const response = await getPaginatedFakeMoviesFn({
-        data: { page: 1, perPage: 10, includeTotal: true },
+        data: { page, perPage: 10, includeTotal: true },
       });
       return response;
     },
