@@ -14,11 +14,11 @@ import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
 import { Route as DashboardQueryDrivenIndexRouteImport } from './routes/_dashboard/query-driven/index'
-import { Route as DashboardNaiveIndexRouteImport } from './routes/_dashboard/naive/index'
 import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs/index'
+import { Route as DashboardDefaultIndexRouteImport } from './routes/_dashboard/default/index'
 import { Route as DashboardCustomPaginationIndexRouteImport } from './routes/_dashboard/custom-pagination/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
-import { Route as DashboardNaiveInfiniteRouteImport } from './routes/_dashboard/naive/infinite'
+import { Route as DashboardDefaultInfiniteRouteImport } from './routes/_dashboard/default/infinite'
 
 const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
   id: '/_dashboard',
@@ -45,14 +45,14 @@ const DashboardQueryDrivenIndexRoute =
     path: '/query-driven/',
     getParentRoute: () => DashboardLayoutRoute,
   } as any)
-const DashboardNaiveIndexRoute = DashboardNaiveIndexRouteImport.update({
-  id: '/naive/',
-  path: '/naive/',
-  getParentRoute: () => DashboardLayoutRoute,
-} as any)
 const DashboardLogsIndexRoute = DashboardLogsIndexRouteImport.update({
   id: '/logs/',
   path: '/logs/',
+  getParentRoute: () => DashboardLayoutRoute,
+} as any)
+const DashboardDefaultIndexRoute = DashboardDefaultIndexRouteImport.update({
+  id: '/default/',
+  path: '/default/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
 const DashboardCustomPaginationIndexRoute =
@@ -66,30 +66,31 @@ const ApiSyncEventsRoute = ApiSyncEventsRouteImport.update({
   path: '/api/sync/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardNaiveInfiniteRoute = DashboardNaiveInfiniteRouteImport.update({
-  id: '/naive/infinite',
-  path: '/naive/infinite',
-  getParentRoute: () => DashboardLayoutRoute,
-} as any)
+const DashboardDefaultInfiniteRoute =
+  DashboardDefaultInfiniteRouteImport.update({
+    id: '/default/infinite',
+    path: '/default/infinite',
+    getParentRoute: () => DashboardLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
-  '/naive/infinite': typeof DashboardNaiveInfiniteRoute
+  '/default/infinite': typeof DashboardDefaultInfiniteRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
+  '/default/': typeof DashboardDefaultIndexRoute
   '/logs/': typeof DashboardLogsIndexRoute
-  '/naive/': typeof DashboardNaiveIndexRoute
   '/query-driven/': typeof DashboardQueryDrivenIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
-  '/naive/infinite': typeof DashboardNaiveInfiniteRoute
+  '/default/infinite': typeof DashboardDefaultInfiniteRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/custom-pagination': typeof DashboardCustomPaginationIndexRoute
+  '/default': typeof DashboardDefaultIndexRoute
   '/logs': typeof DashboardLogsIndexRoute
-  '/naive': typeof DashboardNaiveIndexRoute
   '/query-driven': typeof DashboardQueryDrivenIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
@@ -98,11 +99,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_dashboard': typeof DashboardLayoutRouteWithChildren
   '/_dashboard/': typeof DashboardIndexRoute
-  '/_dashboard/naive/infinite': typeof DashboardNaiveInfiniteRoute
+  '/_dashboard/default/infinite': typeof DashboardDefaultInfiniteRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/_dashboard/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
+  '/_dashboard/default/': typeof DashboardDefaultIndexRoute
   '/_dashboard/logs/': typeof DashboardLogsIndexRoute
-  '/_dashboard/naive/': typeof DashboardNaiveIndexRoute
   '/_dashboard/query-driven/': typeof DashboardQueryDrivenIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
@@ -111,22 +112,22 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/naive/infinite'
+    | '/default/infinite'
     | '/api/sync/events'
     | '/custom-pagination/'
+    | '/default/'
     | '/logs/'
-    | '/naive/'
     | '/query-driven/'
     | '/settings/'
     | '/api/logs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/naive/infinite'
+    | '/default/infinite'
     | '/api/sync/events'
     | '/custom-pagination'
+    | '/default'
     | '/logs'
-    | '/naive'
     | '/query-driven'
     | '/settings'
     | '/api/logs'
@@ -134,11 +135,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_dashboard'
     | '/_dashboard/'
-    | '/_dashboard/naive/infinite'
+    | '/_dashboard/default/infinite'
     | '/api/sync/events'
     | '/_dashboard/custom-pagination/'
+    | '/_dashboard/default/'
     | '/_dashboard/logs/'
-    | '/_dashboard/naive/'
     | '/_dashboard/query-driven/'
     | '/_dashboard/settings/'
     | '/api/logs/'
@@ -187,18 +188,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardQueryDrivenIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
-    '/_dashboard/naive/': {
-      id: '/_dashboard/naive/'
-      path: '/naive'
-      fullPath: '/naive/'
-      preLoaderRoute: typeof DashboardNaiveIndexRouteImport
-      parentRoute: typeof DashboardLayoutRoute
-    }
     '/_dashboard/logs/': {
       id: '/_dashboard/logs/'
       path: '/logs'
       fullPath: '/logs/'
       preLoaderRoute: typeof DashboardLogsIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
+    '/_dashboard/default/': {
+      id: '/_dashboard/default/'
+      path: '/default'
+      fullPath: '/default/'
+      preLoaderRoute: typeof DashboardDefaultIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
     '/_dashboard/custom-pagination/': {
@@ -215,11 +216,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSyncEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_dashboard/naive/infinite': {
-      id: '/_dashboard/naive/infinite'
-      path: '/naive/infinite'
-      fullPath: '/naive/infinite'
-      preLoaderRoute: typeof DashboardNaiveInfiniteRouteImport
+    '/_dashboard/default/infinite': {
+      id: '/_dashboard/default/infinite'
+      path: '/default/infinite'
+      fullPath: '/default/infinite'
+      preLoaderRoute: typeof DashboardDefaultInfiniteRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
   }
@@ -227,20 +228,20 @@ declare module '@tanstack/react-router' {
 
 interface DashboardLayoutRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardNaiveInfiniteRoute: typeof DashboardNaiveInfiniteRoute
+  DashboardDefaultInfiniteRoute: typeof DashboardDefaultInfiniteRoute
   DashboardCustomPaginationIndexRoute: typeof DashboardCustomPaginationIndexRoute
+  DashboardDefaultIndexRoute: typeof DashboardDefaultIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
-  DashboardNaiveIndexRoute: typeof DashboardNaiveIndexRoute
   DashboardQueryDrivenIndexRoute: typeof DashboardQueryDrivenIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
 }
 
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardNaiveInfiniteRoute: DashboardNaiveInfiniteRoute,
+  DashboardDefaultInfiniteRoute: DashboardDefaultInfiniteRoute,
   DashboardCustomPaginationIndexRoute: DashboardCustomPaginationIndexRoute,
+  DashboardDefaultIndexRoute: DashboardDefaultIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
-  DashboardNaiveIndexRoute: DashboardNaiveIndexRoute,
   DashboardQueryDrivenIndexRoute: DashboardQueryDrivenIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
 }

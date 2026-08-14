@@ -13,14 +13,14 @@ export const Route = createFileRoute("/_dashboard/")({
 
 const links = [
   {
-    label: "Naive",
-    href: "/naive/",
+    label: "Default",
+    href: "/default/",
     description:
       "All 1000 items are loaded at once. A lazy table or list can be used to manage the rendering in an effecient manner",
   },
   {
-    label: "Naive Infinite",
-    href: "/naive/infinite",
+    label: "Default Infinite",
+    href: "/default/infinite",
     description:
       "leverages useLiveinfinitequery to load the items , It still loads all the items inot the collection at once and gives you controls to load a sumbset inot the hook",
   },

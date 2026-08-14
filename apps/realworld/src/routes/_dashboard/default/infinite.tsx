@@ -8,7 +8,7 @@ const ListMoviesInfinite = lazy(() =>
   })),
 );
 
-export const Route = createFileRoute("/_dashboard/naive/infinite")({
+export const Route = createFileRoute("/_dashboard/default/infinite")({
   component: RouteComponent,
   pendingComponent: PendingComponent,
   ssr: false,

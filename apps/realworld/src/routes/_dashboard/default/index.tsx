@@ -6,7 +6,7 @@ const ExperimentsPage = lazy(() =>
   import("./-components/ListMovies").then((module) => ({ default: module.ListMovies })),
 );
 
-export const Route = createFileRoute("/_dashboard/naive/")({
+export const Route = createFileRoute("/_dashboard/default/")({
   component: RouteComponent,
   pendingComponent: PendingComponent,
   ssr: false,
