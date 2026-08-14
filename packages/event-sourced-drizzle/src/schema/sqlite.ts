@@ -66,3 +66,43 @@ export const defaultSqliteOutbox = defineOutboxTable();
 
 /** Default unextended inbox table. */
 export const defaultSqliteInbox = defineInboxTable();
+
+/** Sync metadata key-value table. */
+export const sqliteSyncMetaColumns = {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+};
+
+export function defineSyncMetaTable(name = "sync_meta") {
+  return sqliteTable(name, { ...sqliteSyncMetaColumns });
+}
+
+export const defaultSqliteSyncMeta = defineSyncMetaTable();
+
+/** Dead-letter table columns. */
+export const sqliteDeadLetterColumns = {
+  eventId: text("event_id").primaryKey(),
+  collectionId: text("collection_id").notNull(),
+  type: text("type").$type<MutationType>().notNull(),
+  key: text("key").notNull(),
+  payload: text("payload", { mode: "json" }).$type<Record<string, unknown>>().notNull(),
+  previous: text("previous", { mode: "json" }).$type<Record<string, unknown> | null>(),
+  txId: text("tx_id"),
+  clientId: text("client_id"),
+  schemaVersion: integer("schema_version").notNull().default(1),
+  timestamp: integer("timestamp").notNull(),
+  localSeq: integer("local_seq"),
+  globalSeq: integer("global_seq"),
+  direction: text("direction").$type<"outbound" | "inbound">().notNull(),
+  reason: text("reason").notNull(),
+  message: text("message").notNull(),
+  code: text("code"),
+  attemptCount: integer("attempt_count").notNull().default(0),
+  failedAt: integer("failed_at").notNull(),
+};
+
+export function defineDeadLetterTable(name = "sync_dead_letter") {
+  return sqliteTable(name, { ...sqliteDeadLetterColumns });
+}
+
+export const defaultSqliteDeadLetter = defineDeadLetterTable();
