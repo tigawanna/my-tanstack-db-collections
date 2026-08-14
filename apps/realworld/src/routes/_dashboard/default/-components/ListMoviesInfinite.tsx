@@ -7,7 +7,8 @@ import { moviesCollection } from "./collection";
 
 export function ListMoviesInfinite() {
   const { isLoading, fetchNextPage, pages, pageParams, hasNextPage, state } = useLiveInfiniteQuery(
-    (q) => q.from({ movies: moviesCollection }).orderBy(({ movies }) => movies.rating, "desc"),
+    (q) =>
+      q.from({ movies: moviesCollection }).orderBy(({ movies }) => movies.vote_average, "desc"),
     {
       initialPageParam: 0,
       pageSize: 200,

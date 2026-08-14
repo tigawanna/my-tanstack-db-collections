@@ -17,7 +17,13 @@ import {
 const ROUTE_ID = "/_dashboard/movies/";
 const routeApi = getRouteApi(ROUTE_ID);
 
-const MOVIE_SORT_KEYS = ["title", "description", "rating", "releaseDate"] as const;
+const MOVIE_SORT_KEYS = [
+  "title",
+  "overview",
+  "vote_average",
+  "release_date",
+  "popularity",
+] as const;
 
 export function ListMovies() {
   const { inputValue, onSearchChange, isDebouncing } = usePageSearchQuery(ROUTE_ID);
@@ -31,7 +37,7 @@ export function ListMovies() {
     sortBy: search.sortBy,
     sortOrder: search.sortDirection,
     allowedKeys: MOVIE_SORT_KEYS,
-    defaultSortBy: "rating",
+    defaultSortBy: "vote_average",
     defaultSortOrder: "desc",
   });
 
@@ -47,10 +53,10 @@ export function ListMovies() {
         .select(({ movies, watchlist }) => ({
           id: movies.id,
           title: movies.title,
-          description: movies.description,
-          image: movies.image,
-          rating: movies.rating,
-          releaseDate: movies.releaseDate,
+          overview: movies.overview,
+          poster_path: movies.poster_path,
+          vote_average: movies.vote_average,
+          release_date: movies.release_date,
           page: movies.page,
           q: movies.q,
           watchlistId: watchlist.id,
@@ -64,11 +70,11 @@ export function ListMovies() {
   });
   const sortableColumns = createSortableColumns(queryDrivenMoviesCollection, [
     { value: "title", label: "Title" },
-    { value: "description", label: "Description" },
-    { value: "rating", label: "Rating" },
-    { value: "releaseDate", label: "Release Date" },
+    { value: "overview", label: "Overview" },
+    { value: "vote_average", label: "Rating" },
+    { value: "release_date", label: "Release Date" },
+    { value: "popularity", label: "Popularity" },
   ]);
-  console.log({ meta, data });
 
   function toggleWatchlist(movie: Movie & { watchlistId?: string | null; onWatchlist?: boolean }) {
     if (movie.onWatchlist && movie.watchlistId) {
@@ -79,6 +85,11 @@ export function ListMovies() {
       id: crypto.randomUUID(),
       movieId: movie.id,
       createdAt: new Date().toISOString(),
+      title: movie.title,
+      poster_path: movie.poster_path,
+      overview: movie.overview,
+      vote_average: movie.vote_average,
+      release_date: movie.release_date,
     });
   }
 
@@ -90,13 +101,13 @@ export function ListMovies() {
           setKeyword={(value) => onSearchChange(value)}
           isDebouncing={isDebouncing}
           inputProps={{
-            placeholder: "Search lessons…",
+            placeholder: "Search movies…",
           }}
         />
         <TanstackDBColumnFilters
           collection={queryDrivenMoviesCollection}
           sortableColumns={sortableColumns}
-          defaultSortBy="rating"
+          defaultSortBy="vote_average"
           defaultSortDirection="desc"
           search={search}
           navigate={navigate}
@@ -106,7 +117,9 @@ export function ListMovies() {
         data={data}
         isLoading={isLoading}
         onToggleWatchlist={toggleWatchlist}
-        onDetailsClick={(movie) => navigate({ to: "/movies/$movie", params: { movie: movie.id } })}
+        onDetailsClick={(movie) =>
+          navigate({ to: "/movies/$movie", params: { movie: String(movie.id) } })
+        }
       />
       {meta?.totalPages ? (
         <TSRListPagination

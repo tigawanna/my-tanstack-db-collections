@@ -4,13 +4,17 @@ import { z } from "zod";
 
 export const fakeWatchlistSchema = z.object({
   id: z.string(),
-  movieId: z.string(),
+  movieId: z.number(),
   createdAt: z.string(),
+  title: z.string(),
+  poster_path: z.string().nullable(),
+  overview: z.string(),
+  vote_average: z.number(),
+  release_date: z.string(),
 });
 
 export type FakeWatchlistItem = z.infer<typeof fakeWatchlistSchema>;
 
-// In-memory store for the fake watchlist API (same pattern as fake movies).
 export const fakeWatchlistCollection = createCollection(
   localOnlyCollectionOptions({
     id: "fake-watchlist",

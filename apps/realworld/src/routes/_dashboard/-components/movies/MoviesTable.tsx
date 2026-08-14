@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { tmdbImageUrl } from "@/fake-data/tmdb";
 import {
   Table,
   TableBody,
@@ -12,12 +13,12 @@ import {
 import { Bookmark, BookmarkCheck, ChevronRight, Star } from "lucide-react";
 
 export type Movie = {
-  id: string;
+  id: number;
   title: string;
-  description: string;
-  image: string;
-  rating: number;
-  releaseDate: string;
+  overview: string;
+  poster_path: string | null;
+  vote_average: number;
+  release_date: string;
   watchlistId?: string | null;
   onWatchlist?: boolean;
 };
@@ -57,7 +58,7 @@ export function MoviesTable({
           <TableRow>
             <TableHead className="pl-4">Idx</TableHead>
             <TableHead className="pl-4">Title</TableHead>
-            <TableHead className="hidden md:table-cell">Description</TableHead>
+            <TableHead className="hidden md:table-cell">Overview</TableHead>
             <TableHead>Rating</TableHead>
             <TableHead className={onToggleWatchlist ? undefined : "pr-4"}>Released</TableHead>
             {onToggleWatchlist ? (
@@ -95,25 +96,32 @@ function MovieRow({
   onToggleWatchlist?: (movie: Movie) => void;
   onDetailsClick?: (movie: Movie) => void;
 }) {
+  const poster = tmdbImageUrl(movie.poster_path, "w92");
+
   return (
     <TableRow className="cursor-pointer hover:bg-muted">
       <TableCell>{idx + 1}</TableCell>
       <TableCell className="max-w-56 pl-4 font-medium whitespace-normal">
-        <span className="line-clamp-2">{movie.title}</span>
+        <span className="flex items-center gap-3">
+          {poster ? (
+            <img src={poster} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+          ) : null}
+          <span className="line-clamp-2">{movie.title}</span>
+        </span>
       </TableCell>
       <TableCell className="text-muted-foreground hidden max-w-md whitespace-normal md:table-cell">
-        <span className="line-clamp-2">{movie.description}</span>
+        <span className="line-clamp-2">{movie.overview}</span>
       </TableCell>
       <TableCell>
         <span className="inline-flex items-center gap-1 tabular-nums">
           <Star className="size-3.5 fill-amber-400 text-amber-400" aria-hidden />
-          {movie.rating}/5
+          {movie.vote_average.toFixed(1)}
         </span>
       </TableCell>
       <TableCell
         className={`text-muted-foreground tabular-nums ${onToggleWatchlist ? "" : "pr-4"}`}
       >
-        {formatReleaseDate(movie.releaseDate)}
+        {formatReleaseDate(movie.release_date)}
       </TableCell>
       {onToggleWatchlist ? (
         <TableCell className="pr-4 text-right">
@@ -151,7 +159,7 @@ function MoviesTableSkeleton({ showWatchlist }: { showWatchlist?: boolean }) {
         <TableHeader>
           <TableRow>
             <TableHead className="pl-4">Title</TableHead>
-            <TableHead className="hidden md:table-cell">Description</TableHead>
+            <TableHead className="hidden md:table-cell">Overview</TableHead>
             <TableHead>Rating</TableHead>
             <TableHead className={showWatchlist ? undefined : "pr-4"}>Released</TableHead>
             {showWatchlist ? <TableHead className="pr-4 text-right">Watchlist</TableHead> : null}
@@ -186,6 +194,7 @@ function MoviesTableSkeleton({ showWatchlist }: { showWatchlist?: boolean }) {
 }
 
 function formatReleaseDate(value: string) {
+  if (!value) return "—";
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
   }).format(new Date(value));

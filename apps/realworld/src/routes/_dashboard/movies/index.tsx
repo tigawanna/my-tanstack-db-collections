@@ -7,7 +7,7 @@ const searchParams = z.object({
   q: z.string().optional(),
   page: z.number().optional(),
   perPage: z.number().optional(),
-  sortBy: z.string().optional().default("rating"),
+  sortBy: z.string().optional().default("vote_average"),
   sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
 });
 

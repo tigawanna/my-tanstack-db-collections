@@ -21,7 +21,13 @@ import {
 export const PAGINATED_MOVIES_COLLECTION_QUERY_KEY = "query-driven-movies";
 export const WATCHLIST_COLLECTION_QUERY_KEY = "query-driven-watchlist";
 
-const MOVIE_SORT_KEYS = ["title", "description", "rating", "releaseDate"] as const;
+const MOVIE_SORT_KEYS = [
+  "title",
+  "overview",
+  "vote_average",
+  "release_date",
+  "popularity",
+] as const;
 
 type MoviesWhereClause = {
   page?: { _eq: number };
@@ -48,7 +54,7 @@ export const queryDrivenMoviesCollection = createCollection(
         sortBy: primarySort ? String(primarySort.field.at(-1)) : undefined,
         sortOrder: primarySort?.direction,
         allowedKeys: MOVIE_SORT_KEYS,
-        defaultSortBy: "rating",
+        defaultSortBy: "vote_average",
         defaultSortOrder: "desc",
       });
       const response = await getPaginatedFakeMoviesFn({
@@ -110,7 +116,7 @@ const persistence = createBrowserWASQLitePersistence({
 export const queryDrivenWatchlistCollection = createCollection({
   ...persistedCollectionOptions({
     persistence,
-    schemaVersion: 1,
+    schemaVersion: 2,
     ...queryCollectionOptions({
       queryKey: [WATCHLIST_COLLECTION_QUERY_KEY],
       queryFn: async () => getFakeWatchlistFn(),
@@ -128,6 +134,11 @@ export const queryDrivenWatchlistCollection = createCollection({
                 id: mutation.modified.id,
                 movieId: mutation.modified.movieId,
                 createdAt: mutation.modified.createdAt,
+                title: mutation.modified.title,
+                poster_path: mutation.modified.poster_path,
+                overview: mutation.modified.overview,
+                vote_average: mutation.modified.vote_average,
+                release_date: mutation.modified.release_date,
               } satisfies FakeWatchlistItem,
             }),
           ),
