@@ -1,7 +1,7 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { SQLiteColumnBuilderBase } from "drizzle-orm/sqlite-core";
 
-import type { MutationType, OutboxSyncStatus } from "../protocol";
+import type { MutationType, OutboxSyncStatus } from "../internal/types";
 
 /** Required outbox columns — do not rename JS keys or SQL names. */
 export const sqliteOutboxRequiredColumns = {

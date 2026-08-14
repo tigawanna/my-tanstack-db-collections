@@ -1,7 +1,7 @@
 {
-  "name": "drizzle-sync-engine",
+  "name": "event-sourced-drizzle",
   "version": "0.0.1",
-  "description": "Drizzle-backed event sync engine with extensible inbox/outbox tables (SQLite + PGlite/Postgres)",
+  "description": "Event-sourced local-first sync engine for Drizzle ORM with extensible inbox/outbox tables (SQLite + PGlite/Postgres)",
   "keywords": [
     "drizzle",
     "event-sourcing",

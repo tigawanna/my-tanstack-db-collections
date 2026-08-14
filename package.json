@@ -15,8 +15,8 @@
     "prepare": "vp config",
     "publish:event-sourced": "pnpm --filter event-sourced-collection publish --access public",
     "pack:event-sourced": "pnpm --filter event-sourced-collection exec npm pack --dry-run",
-    "publish:drizzle-sync": "pnpm --filter drizzle-sync-engine publish --access public",
-    "pack:drizzle-sync": "pnpm --filter drizzle-sync-engine exec npm pack --dry-run"
+    "publish:drizzle-sync": "pnpm --filter event-sourced-drizzle publish --access public",
+    "pack:drizzle-sync": "pnpm --filter event-sourced-drizzle exec npm pack --dry-run"
   },
   "devDependencies": {
     "@typescript/native-preview": "catalog:",

@@ -1,7 +1,7 @@
 import { bigint, boolean, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
 import type { PgColumnBuilderBase } from "drizzle-orm/pg-core";
 
-import type { MutationType, OutboxSyncStatus } from "../protocol";
+import type { MutationType, OutboxSyncStatus } from "../internal/types";
 
 /** Required outbox columns — do not rename JS keys or SQL names. */
 export const pgOutboxRequiredColumns = {
