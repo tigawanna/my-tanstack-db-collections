@@ -102,7 +102,14 @@ export function ListQueryDrivenMovies() {
           navigate={navigate}
         />
       </div>
-      <MoviesTable data={data} isLoading={isLoading} onToggleWatchlist={toggleWatchlist} />
+      <MoviesTable
+        data={data}
+        isLoading={isLoading}
+        onToggleWatchlist={toggleWatchlist}
+        onDetailsClick={(movie) =>
+          navigate({ to: "/query-driven/$movie", params: { movie: movie.id } })
+        }
+      />
       {meta?.totalPages ? (
         <TSRListPagination
           routeID={ROUTE_ID}

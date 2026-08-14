@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -8,8 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Bookmark, BookmarkCheck, Star } from "lucide-react";
+import { Bookmark, BookmarkCheck, ChevronRight, Star } from "lucide-react";
 
 export type Movie = {
   id: string;
@@ -26,9 +26,15 @@ type MoviesTableProps = {
   data: Movie[] | undefined;
   isLoading?: boolean;
   onToggleWatchlist?: (movie: Movie) => void;
+  onDetailsClick?: (movie: Movie) => void;
 };
 
-export function MoviesTable({ data, isLoading = false, onToggleWatchlist }: MoviesTableProps) {
+export function MoviesTable({
+  data,
+  isLoading = false,
+  onToggleWatchlist,
+  onDetailsClick,
+}: MoviesTableProps) {
   if (isLoading) {
     return <MoviesTableSkeleton showWatchlist={Boolean(onToggleWatchlist)} />;
   }
@@ -57,6 +63,9 @@ export function MoviesTable({ data, isLoading = false, onToggleWatchlist }: Movi
             {onToggleWatchlist ? (
               <TableHead className="pr-4 text-right">Watchlist</TableHead>
             ) : null}
+            <TableHead className="pr-4 text-right">
+              <ChevronRight />
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -66,6 +75,7 @@ export function MoviesTable({ data, isLoading = false, onToggleWatchlist }: Movi
               key={movie.id}
               movie={movie}
               onToggleWatchlist={onToggleWatchlist}
+              onDetailsClick={onDetailsClick}
             />
           ))}
         </TableBody>
@@ -78,13 +88,15 @@ function MovieRow({
   movie,
   idx,
   onToggleWatchlist,
+  onDetailsClick,
 }: {
   movie: Movie;
   idx: number;
   onToggleWatchlist?: (movie: Movie) => void;
+  onDetailsClick?: (movie: Movie) => void;
 }) {
   return (
-    <TableRow>
+    <TableRow className="cursor-pointer hover:bg-muted">
       <TableCell>{idx + 1}</TableCell>
       <TableCell className="max-w-56 pl-4 font-medium whitespace-normal">
         <span className="line-clamp-2">{movie.title}</span>
@@ -117,6 +129,17 @@ function MovieRow({
           </Button>
         </TableCell>
       ) : null}
+      <TableCell>
+        <Button
+          className="hover:bg-primary-foreground"
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => onDetailsClick?.(movie)}
+        >
+          <ChevronRight />
+        </Button>
+      </TableCell>
     </TableRow>
   );
 }

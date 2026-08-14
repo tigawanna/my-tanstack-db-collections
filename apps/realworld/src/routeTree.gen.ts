@@ -19,6 +19,7 @@ import { Route as DashboardDefaultIndexRouteImport } from './routes/_dashboard/d
 import { Route as DashboardCustomPaginationIndexRouteImport } from './routes/_dashboard/custom-pagination/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
 import { Route as DashboardDefaultInfiniteRouteImport } from './routes/_dashboard/default/infinite'
+import { Route as DashboardQueryDrivenMovieIndexRouteImport } from './routes/_dashboard/query-driven/$movie/index'
 
 const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
   id: '/_dashboard',
@@ -72,6 +73,12 @@ const DashboardDefaultInfiniteRoute =
     path: '/default/infinite',
     getParentRoute: () => DashboardLayoutRoute,
   } as any)
+const DashboardQueryDrivenMovieIndexRoute =
+  DashboardQueryDrivenMovieIndexRouteImport.update({
+    id: '/query-driven/$movie/',
+    path: '/query-driven/$movie/',
+    getParentRoute: () => DashboardLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/query-driven/': typeof DashboardQueryDrivenIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
+  '/query-driven/$movie/': typeof DashboardQueryDrivenMovieIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByTo {
   '/query-driven': typeof DashboardQueryDrivenIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
+  '/query-driven/$movie': typeof DashboardQueryDrivenMovieIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +116,7 @@ export interface FileRoutesById {
   '/_dashboard/query-driven/': typeof DashboardQueryDrivenIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
+  '/_dashboard/query-driven/$movie/': typeof DashboardQueryDrivenMovieIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/query-driven/'
     | '/settings/'
     | '/api/logs/'
+    | '/query-driven/$movie/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/query-driven'
     | '/settings'
     | '/api/logs'
+    | '/query-driven/$movie'
   id:
     | '__root__'
     | '/_dashboard'
@@ -143,6 +155,7 @@ export interface FileRouteTypes {
     | '/_dashboard/query-driven/'
     | '/_dashboard/settings/'
     | '/api/logs/'
+    | '/_dashboard/query-driven/$movie/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDefaultInfiniteRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
+    '/_dashboard/query-driven/$movie/': {
+      id: '/_dashboard/query-driven/$movie/'
+      path: '/query-driven/$movie'
+      fullPath: '/query-driven/$movie/'
+      preLoaderRoute: typeof DashboardQueryDrivenMovieIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
   }
 }
 
@@ -234,6 +254,7 @@ interface DashboardLayoutRouteChildren {
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
   DashboardQueryDrivenIndexRoute: typeof DashboardQueryDrivenIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+  DashboardQueryDrivenMovieIndexRoute: typeof DashboardQueryDrivenMovieIndexRoute
 }
 
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
@@ -244,6 +265,7 @@ const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
   DashboardQueryDrivenIndexRoute: DashboardQueryDrivenIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  DashboardQueryDrivenMovieIndexRoute: DashboardQueryDrivenMovieIndexRoute,
 }
 
 const DashboardLayoutRouteWithChildren = DashboardLayoutRoute._addFileChildren(
