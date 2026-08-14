@@ -12,14 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardLayoutRouteImport } from './routes/_dashboard/layout'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as ApiLogsIndexRouteImport } from './routes/api/logs/index'
+import { Route as DashboardWatchlistIndexRouteImport } from './routes/_dashboard/watchlist/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
-import { Route as DashboardQueryDrivenIndexRouteImport } from './routes/_dashboard/query-driven/index'
+import { Route as DashboardMoviesIndexRouteImport } from './routes/_dashboard/movies/index'
 import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs/index'
 import { Route as DashboardDefaultIndexRouteImport } from './routes/_dashboard/default/index'
 import { Route as DashboardCustomPaginationIndexRouteImport } from './routes/_dashboard/custom-pagination/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
 import { Route as DashboardDefaultInfiniteRouteImport } from './routes/_dashboard/default/infinite'
-import { Route as DashboardQueryDrivenMovieIndexRouteImport } from './routes/_dashboard/query-driven/$movie/index'
+import { Route as DashboardMoviesMovieIndexRouteImport } from './routes/_dashboard/movies/$movie/index'
 
 const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
   id: '/_dashboard',
@@ -35,17 +36,21 @@ const ApiLogsIndexRoute = ApiLogsIndexRouteImport.update({
   path: '/api/logs/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardWatchlistIndexRoute = DashboardWatchlistIndexRouteImport.update({
+  id: '/watchlist/',
+  path: '/watchlist/',
+  getParentRoute: () => DashboardLayoutRoute,
+} as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
   getParentRoute: () => DashboardLayoutRoute,
 } as any)
-const DashboardQueryDrivenIndexRoute =
-  DashboardQueryDrivenIndexRouteImport.update({
-    id: '/query-driven/',
-    path: '/query-driven/',
-    getParentRoute: () => DashboardLayoutRoute,
-  } as any)
+const DashboardMoviesIndexRoute = DashboardMoviesIndexRouteImport.update({
+  id: '/movies/',
+  path: '/movies/',
+  getParentRoute: () => DashboardLayoutRoute,
+} as any)
 const DashboardLogsIndexRoute = DashboardLogsIndexRouteImport.update({
   id: '/logs/',
   path: '/logs/',
@@ -73,10 +78,10 @@ const DashboardDefaultInfiniteRoute =
     path: '/default/infinite',
     getParentRoute: () => DashboardLayoutRoute,
   } as any)
-const DashboardQueryDrivenMovieIndexRoute =
-  DashboardQueryDrivenMovieIndexRouteImport.update({
-    id: '/query-driven/$movie/',
-    path: '/query-driven/$movie/',
+const DashboardMoviesMovieIndexRoute =
+  DashboardMoviesMovieIndexRouteImport.update({
+    id: '/movies/$movie/',
+    path: '/movies/$movie/',
     getParentRoute: () => DashboardLayoutRoute,
   } as any)
 
@@ -87,10 +92,11 @@ export interface FileRoutesByFullPath {
   '/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/default/': typeof DashboardDefaultIndexRoute
   '/logs/': typeof DashboardLogsIndexRoute
-  '/query-driven/': typeof DashboardQueryDrivenIndexRoute
+  '/movies/': typeof DashboardMoviesIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
+  '/watchlist/': typeof DashboardWatchlistIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
-  '/query-driven/$movie/': typeof DashboardQueryDrivenMovieIndexRoute
+  '/movies/$movie/': typeof DashboardMoviesMovieIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
@@ -99,10 +105,11 @@ export interface FileRoutesByTo {
   '/custom-pagination': typeof DashboardCustomPaginationIndexRoute
   '/default': typeof DashboardDefaultIndexRoute
   '/logs': typeof DashboardLogsIndexRoute
-  '/query-driven': typeof DashboardQueryDrivenIndexRoute
+  '/movies': typeof DashboardMoviesIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
+  '/watchlist': typeof DashboardWatchlistIndexRoute
   '/api/logs': typeof ApiLogsIndexRoute
-  '/query-driven/$movie': typeof DashboardQueryDrivenMovieIndexRoute
+  '/movies/$movie': typeof DashboardMoviesMovieIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,10 +120,11 @@ export interface FileRoutesById {
   '/_dashboard/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/_dashboard/default/': typeof DashboardDefaultIndexRoute
   '/_dashboard/logs/': typeof DashboardLogsIndexRoute
-  '/_dashboard/query-driven/': typeof DashboardQueryDrivenIndexRoute
+  '/_dashboard/movies/': typeof DashboardMoviesIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/_dashboard/watchlist/': typeof DashboardWatchlistIndexRoute
   '/api/logs/': typeof ApiLogsIndexRoute
-  '/_dashboard/query-driven/$movie/': typeof DashboardQueryDrivenMovieIndexRoute
+  '/_dashboard/movies/$movie/': typeof DashboardMoviesMovieIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,10 +135,11 @@ export interface FileRouteTypes {
     | '/custom-pagination/'
     | '/default/'
     | '/logs/'
-    | '/query-driven/'
+    | '/movies/'
     | '/settings/'
+    | '/watchlist/'
     | '/api/logs/'
-    | '/query-driven/$movie/'
+    | '/movies/$movie/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,10 +148,11 @@ export interface FileRouteTypes {
     | '/custom-pagination'
     | '/default'
     | '/logs'
-    | '/query-driven'
+    | '/movies'
     | '/settings'
+    | '/watchlist'
     | '/api/logs'
-    | '/query-driven/$movie'
+    | '/movies/$movie'
   id:
     | '__root__'
     | '/_dashboard'
@@ -152,10 +162,11 @@ export interface FileRouteTypes {
     | '/_dashboard/custom-pagination/'
     | '/_dashboard/default/'
     | '/_dashboard/logs/'
-    | '/_dashboard/query-driven/'
+    | '/_dashboard/movies/'
     | '/_dashboard/settings/'
+    | '/_dashboard/watchlist/'
     | '/api/logs/'
-    | '/_dashboard/query-driven/$movie/'
+    | '/_dashboard/movies/$movie/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -187,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLogsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/watchlist/': {
+      id: '/_dashboard/watchlist/'
+      path: '/watchlist'
+      fullPath: '/watchlist/'
+      preLoaderRoute: typeof DashboardWatchlistIndexRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
     '/_dashboard/settings/': {
       id: '/_dashboard/settings/'
       path: '/settings'
@@ -194,11 +212,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
-    '/_dashboard/query-driven/': {
-      id: '/_dashboard/query-driven/'
-      path: '/query-driven'
-      fullPath: '/query-driven/'
-      preLoaderRoute: typeof DashboardQueryDrivenIndexRouteImport
+    '/_dashboard/movies/': {
+      id: '/_dashboard/movies/'
+      path: '/movies'
+      fullPath: '/movies/'
+      preLoaderRoute: typeof DashboardMoviesIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
     '/_dashboard/logs/': {
@@ -236,11 +254,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDefaultInfiniteRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
-    '/_dashboard/query-driven/$movie/': {
-      id: '/_dashboard/query-driven/$movie/'
-      path: '/query-driven/$movie'
-      fullPath: '/query-driven/$movie/'
-      preLoaderRoute: typeof DashboardQueryDrivenMovieIndexRouteImport
+    '/_dashboard/movies/$movie/': {
+      id: '/_dashboard/movies/$movie/'
+      path: '/movies/$movie'
+      fullPath: '/movies/$movie/'
+      preLoaderRoute: typeof DashboardMoviesMovieIndexRouteImport
       parentRoute: typeof DashboardLayoutRoute
     }
   }
@@ -252,9 +270,10 @@ interface DashboardLayoutRouteChildren {
   DashboardCustomPaginationIndexRoute: typeof DashboardCustomPaginationIndexRoute
   DashboardDefaultIndexRoute: typeof DashboardDefaultIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
-  DashboardQueryDrivenIndexRoute: typeof DashboardQueryDrivenIndexRoute
+  DashboardMoviesIndexRoute: typeof DashboardMoviesIndexRoute
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
-  DashboardQueryDrivenMovieIndexRoute: typeof DashboardQueryDrivenMovieIndexRoute
+  DashboardWatchlistIndexRoute: typeof DashboardWatchlistIndexRoute
+  DashboardMoviesMovieIndexRoute: typeof DashboardMoviesMovieIndexRoute
 }
 
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
@@ -263,9 +282,10 @@ const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardCustomPaginationIndexRoute: DashboardCustomPaginationIndexRoute,
   DashboardDefaultIndexRoute: DashboardDefaultIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
-  DashboardQueryDrivenIndexRoute: DashboardQueryDrivenIndexRoute,
+  DashboardMoviesIndexRoute: DashboardMoviesIndexRoute,
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
-  DashboardQueryDrivenMovieIndexRoute: DashboardQueryDrivenMovieIndexRoute,
+  DashboardWatchlistIndexRoute: DashboardWatchlistIndexRoute,
+  DashboardMoviesMovieIndexRoute: DashboardMoviesMovieIndexRoute,
 }
 
 const DashboardLayoutRouteWithChildren = DashboardLayoutRoute._addFileChildren(

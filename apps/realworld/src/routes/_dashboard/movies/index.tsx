@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PendingComponent } from "../-components/shared/Pendng";
-import { ListQueryDrivenMovies } from "./-components/ListQueryDrivenMovies";
+import { ListMovies } from "./-components/ListMovies";
 import z from "zod";
 
 const searchParams = z.object({
@@ -11,7 +11,7 @@ const searchParams = z.object({
   sortDirection: z.enum(["asc", "desc"]).optional().default("desc"),
 });
 
-export const Route = createFileRoute("/_dashboard/query-driven/")({
+export const Route = createFileRoute("/_dashboard/movies/")({
   validateSearch: searchParams,
   component: RouteComponent,
   pendingComponent: PendingComponent,
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_dashboard/query-driven/")({
 function RouteComponent() {
   return (
     <div className="w-full h-full flex flex-col">
-      <ListQueryDrivenMovies />
+      <ListMovies />
     </div>
   );
 }

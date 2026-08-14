@@ -1,0 +1,146 @@
+import {
+  addFakeWatchlistFn,
+  fakeWatchlistSchema,
+  getFakeWatchlistFn,
+  removeFakeWatchlistFn,
+  type FakeWatchlistItem,
+} from "@/fake-data/fake-atchlist";
+import { getPaginatedFakeMoviesFn } from "@/fake-data/fake-moviees";
+import { resolveSortOrder } from "@/lib/tanstack/db/pagination";
+import { parseWhereWithHandlers } from "@/lib/tanstack/db/utils";
+import { getQueryClient } from "@/lib/tanstack/query/queryclient";
+import { BasicIndex, createCollection, parseLoadSubsetOptions } from "@tanstack/db";
+import { queryCollectionOptions } from "@tanstack/query-db-collection";
+
+import {
+  createBrowserWASQLitePersistence,
+  openBrowserWASQLiteOPFSDatabase,
+  persistedCollectionOptions,
+} from "@tanstack/browser-db-sqlite-persistence";
+
+export const PAGINATED_MOVIES_COLLECTION_QUERY_KEY = "query-driven-movies";
+export const WATCHLIST_COLLECTION_QUERY_KEY = "query-driven-watchlist";
+
+const MOVIE_SORT_KEYS = ["title", "description", "rating", "releaseDate"] as const;
+
+type MoviesWhereClause = {
+  page?: { _eq: number };
+  q?: { _eq?: string; _ilike?: string };
+};
+
+function parseSearchQ(where: MoviesWhereClause | null | undefined) {
+  const raw = where?.q?._eq ?? where?.q?._ilike;
+  if (!raw) return undefined;
+  const stripped = raw.replace(/^%|%$/g, "").trim();
+  return stripped || undefined;
+}
+
+export const queryDrivenMoviesCollection = createCollection(
+  queryCollectionOptions({
+    queryKey: [PAGINATED_MOVIES_COLLECTION_QUERY_KEY],
+    queryFn: async (ctx) => {
+      const where = parseWhereWithHandlers<MoviesWhereClause>(ctx.meta?.loadSubsetOptions?.where);
+      const { sorts } = parseLoadSubsetOptions(ctx.meta?.loadSubsetOptions);
+      const page = where?.page?._eq ?? 1;
+      const q = parseSearchQ(where);
+      const primarySort = sorts[0];
+      const { sortBy, sortOrder: sortDirection } = resolveSortOrder({
+        sortBy: primarySort ? String(primarySort.field.at(-1)) : undefined,
+        sortOrder: primarySort?.direction,
+        allowedKeys: MOVIE_SORT_KEYS,
+        defaultSortBy: "rating",
+        defaultSortOrder: "desc",
+      });
+      const response = await getPaginatedFakeMoviesFn({
+        data: { page, perPage: 10, q, sortBy, sortDirection, includeTotal: true },
+      });
+      return response;
+    },
+    select: (data) => data.items,
+    queryClient: getQueryClient(),
+    getKey: (item) => item.id,
+    autoIndex: "eager",
+    defaultIndexType: BasicIndex,
+    syncMode: "on-demand",
+    staleTime: 1000 * 60 * 60,
+  }),
+);
+
+// export const queryDrivenWatchlistCollection = createCollection(
+//   queryCollectionOptions({
+//     queryKey: [WATCHLIST_COLLECTION_QUERY_KEY],
+//     queryFn: async () => getFakeWatchlistFn(),
+//     queryClient: getQueryClient(),
+//     schema: fakeWatchlistSchema,
+//     getKey: (item) => item.id,
+//     autoIndex: "eager",
+//     defaultIndexType: BasicIndex,
+//     staleTime: 1000 * 60 * 60,
+//     onInsert: async ({ transaction }) => {
+//       await Promise.all(
+//         transaction.mutations.map((mutation) =>
+//           addFakeWatchlistFn({
+//             data: {
+//               id: mutation.modified.id,
+//               movieId: mutation.modified.movieId,
+//               createdAt: mutation.modified.createdAt,
+//             } satisfies FakeWatchlistItem,
+//           }),
+//         ),
+//       );
+//     },
+//     onDelete: async ({ transaction }) => {
+//       await Promise.all(
+//         transaction.mutations.map((mutation) =>
+//           removeFakeWatchlistFn({ data: { id: String(mutation.key) } }),
+//         ),
+//       );
+//     },
+//   }),
+// );
+
+const database = await openBrowserWASQLiteOPFSDatabase({
+  databaseName: "my-app.sqlite",
+});
+
+const persistence = createBrowserWASQLitePersistence({
+  database,
+});
+
+export const queryDrivenWatchlistCollection = createCollection({
+  ...persistedCollectionOptions({
+    persistence,
+    schemaVersion: 1,
+    ...queryCollectionOptions({
+      queryKey: [WATCHLIST_COLLECTION_QUERY_KEY],
+      queryFn: async () => getFakeWatchlistFn(),
+      queryClient: getQueryClient(),
+      schema: fakeWatchlistSchema,
+      getKey: (item) => item.id,
+      autoIndex: "eager",
+      defaultIndexType: BasicIndex,
+      staleTime: 1000 * 60 * 60,
+      onInsert: async ({ transaction }) => {
+        await Promise.all(
+          transaction.mutations.map((mutation) =>
+            addFakeWatchlistFn({
+              data: {
+                id: mutation.modified.id,
+                movieId: mutation.modified.movieId,
+                createdAt: mutation.modified.createdAt,
+              } satisfies FakeWatchlistItem,
+            }),
+          ),
+        );
+      },
+      onDelete: async ({ transaction }) => {
+        await Promise.all(
+          transaction.mutations.map((mutation) =>
+            removeFakeWatchlistFn({ data: { id: String(mutation.key) } }),
+          ),
+        );
+      },
+    }),
+  }),
+  schema: fakeWatchlistSchema,
+});

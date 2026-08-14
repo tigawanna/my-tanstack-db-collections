@@ -5,7 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 import { queryDrivenMoviesCollection } from "../-components/query-driven-collection";
 
-export const Route = createFileRoute("/_dashboard/query-driven/$movie/")({
+export const Route = createFileRoute("/_dashboard/movies/$movie/")({
   component: RouteComponent,
   ssr: false,
 });

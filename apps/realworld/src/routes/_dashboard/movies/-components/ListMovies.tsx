@@ -14,12 +14,12 @@ import {
   queryDrivenWatchlistCollection,
 } from "./query-driven-collection";
 
-const ROUTE_ID = "/_dashboard/query-driven/";
+const ROUTE_ID = "/_dashboard/movies/";
 const routeApi = getRouteApi(ROUTE_ID);
 
 const MOVIE_SORT_KEYS = ["title", "description", "rating", "releaseDate"] as const;
 
-export function ListQueryDrivenMovies() {
+export function ListMovies() {
   const { inputValue, onSearchChange, isDebouncing } = usePageSearchQuery(ROUTE_ID);
 
   const search = routeApi.useSearch();
@@ -106,9 +106,7 @@ export function ListQueryDrivenMovies() {
         data={data}
         isLoading={isLoading}
         onToggleWatchlist={toggleWatchlist}
-        onDetailsClick={(movie) =>
-          navigate({ to: "/query-driven/$movie", params: { movie: movie.id } })
-        }
+        onDetailsClick={(movie) => navigate({ to: "/movies/$movie", params: { movie: movie.id } })}
       />
       {meta?.totalPages ? (
         <TSRListPagination
