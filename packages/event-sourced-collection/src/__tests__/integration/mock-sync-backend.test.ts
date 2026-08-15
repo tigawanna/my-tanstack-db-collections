@@ -1,26 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { createEventSourcedDB } from "../create-event-sourced-db";
-import { createMockSyncBackend } from "../mock-sync-backend";
-import type { EventSourcedDB } from "../types";
-import {
-  createFakePersistence,
-  fakeCreateCollection,
-  fakePersistedCollectionOptions,
-} from "./fake-collection";
-
-type Todo = { id: string; title: string; done: boolean };
-type TodoDefs = { todos: { getKey: (todo: Todo) => string } };
+import { createMockSyncBackend } from "../../mock-sync-backend";
+import type { EventSourcedDB } from "../../types";
+import { openTodoDb, type TodoDefs } from "../helpers/node-db";
 
 function createDb(
   sync: ReturnType<typeof createMockSyncBackend>,
   overrides: { clientId?: string; pushBatchSize?: number } = {},
 ): Promise<EventSourcedDB<TodoDefs>> {
-  return createEventSourcedDB<TodoDefs>({
-    persistence: createFakePersistence(),
-    createCollection: fakeCreateCollection,
-    persistedCollectionOptions: fakePersistedCollectionOptions,
-    collections: { todos: { getKey: (todo: Todo) => todo.id } },
+  return openTodoDb({
     sync,
     ...overrides,
   });

@@ -48,6 +48,8 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "test": "vp test run",
+    "test:unit": "vp test run src/__tests__/unit",
+    "test:integration": "vp test run src/__tests__/integration",
     "check-types": "tsgo --noEmit",
     "prepublishOnly": "pnpm run build",
     "check-exports": "attw --pack . --profile node16 --ignore-rules cjs-resolves-to-esm",

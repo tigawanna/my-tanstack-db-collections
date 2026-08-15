@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { createLazySingleton } from "../lazy-singleton";
+import { createLazySingleton } from "../../lazy-singleton";
 
 type Box = { value: number; greet: () => string };
 
@@ -10,23 +10,29 @@ function makeBox(value: number): Box {
 
 describe("createLazySingleton", () => {
   it("runs the factory once across concurrent ensure() calls", async () => {
-    const factory = vi.fn(async () => makeBox(1));
-    const singleton = createLazySingleton(factory);
+    let factoryCalls = 0;
+    const singleton = createLazySingleton(async () => {
+      factoryCalls += 1;
+      return makeBox(1);
+    });
 
     const [a, b] = await Promise.all([singleton.ensure(), singleton.ensure()]);
 
-    expect(factory).toHaveBeenCalledTimes(1);
+    expect(factoryCalls).toBe(1);
     expect(a).toBe(b);
   });
 
   it("returns the cached instance on subsequent ensure() calls", async () => {
-    const factory = vi.fn(async () => makeBox(2));
-    const singleton = createLazySingleton(factory);
+    let factoryCalls = 0;
+    const singleton = createLazySingleton(async () => {
+      factoryCalls += 1;
+      return makeBox(2);
+    });
 
     const first = await singleton.ensure();
     const second = await singleton.ensure();
 
-    expect(factory).toHaveBeenCalledTimes(1);
+    expect(factoryCalls).toBe(1);
     expect(second).toBe(first);
   });
 
@@ -49,53 +55,64 @@ describe("createLazySingleton", () => {
   });
 
   it("invokes the guard on every ensure() call", async () => {
-    const guard = vi.fn();
-    const singleton = createLazySingleton(async () => makeBox(5), { guard });
-
-    await singleton.ensure();
-    await singleton.ensure();
-
-    expect(guard).toHaveBeenCalledTimes(2);
-  });
-
-  it("propagates guard failures without running the factory", async () => {
-    const factory = vi.fn(async () => makeBox(6));
-    const singleton = createLazySingleton(factory, {
+    let guardCalls = 0;
+    const singleton = createLazySingleton(async () => makeBox(5), {
       guard: () => {
-        throw new Error("blocked");
+        guardCalls += 1;
       },
     });
 
+    await singleton.ensure();
+    await singleton.ensure();
+
+    expect(guardCalls).toBe(2);
+  });
+
+  it("propagates guard failures without running the factory", async () => {
+    let factoryCalls = 0;
+    const singleton = createLazySingleton(
+      async () => {
+        factoryCalls += 1;
+        return makeBox(6);
+      },
+      {
+        guard: () => {
+          throw new Error("blocked");
+        },
+      },
+    );
+
     await expect(singleton.ensure()).rejects.toThrow("blocked");
-    expect(factory).not.toHaveBeenCalled();
+    expect(factoryCalls).toBe(0);
   });
 
   it("allows retrying after a failed factory run", async () => {
-    const factory = vi
-      .fn<() => Promise<Box>>()
-      .mockRejectedValueOnce(new Error("boom"))
-      .mockResolvedValueOnce(makeBox(7));
-    const singleton = createLazySingleton(factory);
+    let factoryCalls = 0;
+    const singleton = createLazySingleton(async () => {
+      factoryCalls += 1;
+      if (factoryCalls === 1) throw new Error("boom");
+      return makeBox(7);
+    });
 
     await expect(singleton.ensure()).rejects.toThrow("boom");
     const instance = await singleton.ensure();
 
-    expect(factory).toHaveBeenCalledTimes(2);
+    expect(factoryCalls).toBe(2);
     expect(instance.value).toBe(7);
   });
 
   it("re-initializes after reset()", async () => {
-    const factory = vi
-      .fn<() => Promise<Box>>()
-      .mockResolvedValueOnce(makeBox(8))
-      .mockResolvedValueOnce(makeBox(9));
-    const singleton = createLazySingleton(factory);
+    let factoryCalls = 0;
+    const singleton = createLazySingleton(async () => {
+      factoryCalls += 1;
+      return makeBox(factoryCalls === 1 ? 8 : 9);
+    });
 
     const first = await singleton.ensure();
     singleton.reset();
     const second = await singleton.ensure();
 
-    expect(factory).toHaveBeenCalledTimes(2);
+    expect(factoryCalls).toBe(2);
     expect(first.value).toBe(8);
     expect(second.value).toBe(9);
     expect(() => singleton.proxy.value).not.toThrow();

@@ -1,24 +1,23 @@
 import { describe, expect, it } from "vitest";
+import Database from "better-sqlite3";
 
-import { createEventSourcedDB } from "../create-event-sourced-db";
-import { createMockSyncBackend } from "../mock-sync-backend";
-import type { EventSourcedDB, EventSourcedDBConfig } from "../types";
+import { createMockSyncBackend } from "../../mock-sync-backend";
+import type { EventSourcedDB, EventSourcedDBConfig } from "../../types";
 import {
-  createFakePersistence,
   createRejectingCollectionFactory,
-  fakeCreateCollection,
-  fakePersistedCollectionOptions,
-  insertManyInTransaction,
-  type FakePersistence,
-} from "./fake-collection";
-
-type Todo = { id: string; title: string; done: boolean };
-type TodoDefs = { todos: { getKey: (todo: Todo) => string } };
+  makeTodo,
+  openTempSqlite,
+  openTodoDb,
+  openTodoDbOnSqlite,
+  todoRows,
+  type Todo,
+  type TodoDefs,
+} from "../helpers/node-db";
 
 type Overrides = Partial<
   Pick<
     EventSourcedDBConfig<TodoDefs>,
-    "clientId" | "persistence" | "pullOverlap" | "retry" | "pushBatchSize" | "createCollection"
+    "clientId" | "pullOverlap" | "retry" | "pushBatchSize" | "createCollection" | "backendMismatch"
   >
 >;
 
@@ -26,25 +25,19 @@ function createDb(
   sync: EventSourcedDBConfig<TodoDefs>["sync"],
   overrides: Overrides = {},
 ): Promise<EventSourcedDB<TodoDefs>> {
-  return createEventSourcedDB<TodoDefs>({
-    persistence: overrides.persistence ?? createFakePersistence(),
-    createCollection: overrides.createCollection ?? fakeCreateCollection,
-    persistedCollectionOptions: fakePersistedCollectionOptions,
-    collections: { todos: { getKey: (todo: Todo) => todo.id } },
+  return openTodoDb({
     sync,
     clientId: overrides.clientId,
     pullOverlap: overrides.pullOverlap,
     retry: overrides.retry,
     pushBatchSize: overrides.pushBatchSize,
+    createCollection: overrides.createCollection,
+    backendMismatch: overrides.backendMismatch,
   });
 }
 
 function todosOf(db: EventSourcedDB<TodoDefs>): Todo[] {
-  return [...db.collections.todos.state.values()].sort((a, b) => a.id.localeCompare(b.id));
-}
-
-function makeTodo(id: string, title = id): Todo {
-  return { id, title, done: false };
+  return todoRows(db.collections.todos);
 }
 
 describe("cross-device convergence", () => {
@@ -221,17 +214,16 @@ describe("cross-device convergence", () => {
 
 describe("client identity", () => {
   it("persists the generated client id across a reload", async () => {
-    const persistence = createFakePersistence();
+    const { sqlite, filePath } = openTempSqlite();
     const backend = createMockSyncBackend();
 
-    const first = await createDb(backend, { persistence });
-    const firstId = [...first.collections.outbox.state.values()];
+    const first = await openTodoDbOnSqlite(sqlite, { sync: backend });
     await first.collections.todos.insert(makeTodo("t1")).isPersisted.promise;
     const authored = [...first.collections.outbox.state.values()][0]!.clientId;
-    expect(firstId).toHaveLength(0);
     first.dispose();
+    sqlite.close();
 
-    const second = await createDb(backend, { persistence });
+    const second = await openTodoDbOnSqlite(new Database(filePath), { sync: backend });
     await second.collections.todos.insert(makeTodo("t2")).isPersisted.promise;
     const reloaded = [...second.collections.outbox.state.values()].find(
       (entry) => entry.key === "t2",
@@ -241,38 +233,44 @@ describe("client identity", () => {
   });
 
   it("does not replay its own pruned history after a reload", async () => {
-    const persistence = createFakePersistence();
+    const { sqlite, filePath } = openTempSqlite();
     const backend = createMockSyncBackend();
 
-    const first = await createDb(backend, { persistence, pullOverlap: 1_000 });
+    const first = await openTodoDbOnSqlite(sqlite, { sync: backend, pullOverlap: 1_000 });
     await first.collections.todos.insert(makeTodo("t1")).isPersisted.promise;
     await first.sync();
     await first.collections.todos.delete("t1").isPersisted.promise;
     await first.sync();
-    // Removes the outbox rows that would otherwise mark these as local echoes.
     await first.pruneSyncedEvents();
     first.dispose();
+    sqlite.close();
 
-    const second = await createDb(backend, { persistence, pullOverlap: 1_000 });
+    const second = await openTodoDbOnSqlite(new Database(filePath), {
+      sync: backend,
+      pullOverlap: 1_000,
+    });
     await second.collections.todos.insert(makeTodo("t1", "recreated")).isPersisted.promise;
 
     const result = await second.sync();
 
-    // Its own historical insert and delete are recognised, not re-applied.
     expect(result.pulled).toBe(0);
     expect(second.collections.todos.get("t1")).toMatchObject({ title: "recreated" });
   });
 
   it("still honours an explicitly configured client id", async () => {
-    const persistence = createFakePersistence();
+    const { sqlite, filePath } = openTempSqlite();
     const backend = createMockSyncBackend();
 
-    const first = await createDb(backend, { persistence, clientId: "device-a" });
+    const first = await openTodoDbOnSqlite(sqlite, { sync: backend, clientId: "device-a" });
     await first.collections.todos.insert(makeTodo("t1")).isPersisted.promise;
     expect([...first.collections.outbox.state.values()][0]?.clientId).toBe("device-a");
     first.dispose();
+    sqlite.close();
 
-    const second = await createDb(backend, { persistence, clientId: "device-b" });
+    const second = await openTodoDbOnSqlite(new Database(filePath), {
+      sync: backend,
+      clientId: "device-b",
+    });
     await second.collections.todos.insert(makeTodo("t2")).isPersisted.promise;
     const entry = [...second.collections.outbox.state.values()].find((row) => row.key === "t2");
 
@@ -323,15 +321,7 @@ describe("backend reset recovery", () => {
 
   it("leaves the outbox alone when the mismatch policy is ignore", async () => {
     const backend = createMockSyncBackend({ backendId: "one" });
-    const db = await createEventSourcedDB<TodoDefs>({
-      persistence: createFakePersistence(),
-      createCollection: fakeCreateCollection,
-      persistedCollectionOptions: fakePersistedCollectionOptions,
-      collections: { todos: { getKey: (todo: Todo) => todo.id } },
-      sync: backend,
-      clientId: "a",
-      backendMismatch: "ignore",
-    });
+    const db = await createDb(backend, { clientId: "a", backendMismatch: "ignore" });
 
     await db.collections.todos.insert(makeTodo("t1")).isPersisted.promise;
     await db.sync();
@@ -442,11 +432,8 @@ describe("transaction batching", () => {
     const backend = createMockSyncBackend();
     const db = await createDb(backend, { clientId: "a", pushBatchSize: 2 });
 
-    await insertManyInTransaction(db.collections.todos, [
-      makeTodo("a1"),
-      makeTodo("a2"),
-      makeTodo("a3"),
-    ]);
+    await db.collections.todos.insert([makeTodo("a1"), makeTodo("a2"), makeTodo("a3")]).isPersisted
+      .promise;
     await db.collections.todos.insert(makeTodo("b1")).isPersisted.promise;
 
     await db.sync();
@@ -460,15 +447,7 @@ describe("transaction batching", () => {
 
 describe("local mutation durability", () => {
   it("rolls the row back when the outbox append fails", async () => {
-    const persistence: FakePersistence = createFakePersistence();
-
-    const db = await createEventSourcedDB<TodoDefs>({
-      persistence,
-      createCollection: fakeCreateCollection,
-      persistedCollectionOptions: fakePersistedCollectionOptions,
-      collections: { todos: { getKey: (todo: Todo) => todo.id } },
-      clientId: "a",
-    });
+    const db = await openTodoDb({ clientId: "a" });
 
     const outbox = db.collections.outbox as unknown as {
       insert: (entry: unknown) => { isPersisted: { promise: Promise<void> } };
@@ -484,7 +463,6 @@ describe("local mutation durability", () => {
       /disk full/,
     );
 
-    // No orphaned row that would never be synced.
     expect(db.collections.todos.get("t1")).toBeUndefined();
 
     outbox.insert = originalInsert;

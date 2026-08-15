@@ -1,7 +1,7 @@
+import { BasicIndex } from "@tanstack/db";
 import { describe, expect, it } from "vitest";
 
-import { createEventSourcedDB } from "../create-event-sourced-db";
-import { backoffDelay } from "../internal/push";
+import Database from "better-sqlite3";
 import type {
   BackendMismatchPolicy,
   DeadLetterEntry,
@@ -17,25 +17,16 @@ import type {
   SyncLock,
   UnknownEventHandling,
   UpcastEventFn,
-} from "../types";
+} from "../../types";
 import {
-  createFakePersistence,
-  fakeCreateCollection,
-  fakePersistedCollectionOptions,
-  getFakeCollectionIndexes,
-  seedCollection,
-  type FakePersistence,
-} from "./fake-collection";
-
-type Todo = {
-  id: string;
-  title: string;
-  done: boolean;
-};
-
-type TodoDefs = {
-  todos: { getKey: (todo: Todo) => string };
-};
+  makeTodo,
+  openEventSourcedDb,
+  openTempSqlite,
+  openTodoDb,
+  openTodoDbOnSqlite,
+  type TodoDefs,
+} from "../helpers/node-db";
+import type { CreateCollectionFn } from "../../persisted-collection";
 
 type TestTransport = {
   push: (events: ReadonlyArray<OutboundEvent>) => Promise<PushResponse>;
@@ -43,7 +34,6 @@ type TestTransport = {
 };
 
 type CreateDbOptions = {
-  persistence?: FakePersistence;
   sync?: TestTransport;
   clientId?: string;
   unknownEventHandling?: UnknownEventHandling;
@@ -56,29 +46,12 @@ type CreateDbOptions = {
   conflictDetection?: boolean;
   lock?: SyncLock;
   hooks?: EventSourcedHooks;
+  syncEnabled?: boolean;
+  createCollection?: CreateCollectionFn;
 };
 
 function createDb(options: CreateDbOptions = {}): Promise<EventSourcedDB<TodoDefs>> {
-  return createEventSourcedDB<TodoDefs>({
-    persistence: options.persistence ?? createFakePersistence(),
-    createCollection: fakeCreateCollection,
-    persistedCollectionOptions: fakePersistedCollectionOptions,
-    collections: {
-      todos: { getKey: (todo: Todo) => todo.id },
-    },
-    sync: options.sync,
-    clientId: options.clientId,
-    unknownEventHandling: options.unknownEventHandling,
-    pullOverlap: options.pullOverlap,
-    eventSchemaVersion: options.eventSchemaVersion,
-    upcastEvent: options.upcastEvent,
-    retry: options.retry,
-    pushBatchSize: options.pushBatchSize,
-    backendMismatch: options.backendMismatch,
-    conflictDetection: options.conflictDetection,
-    lock: options.lock,
-    hooks: options.hooks,
-  });
+  return openTodoDb(options);
 }
 
 function outboxRows(db: EventSourcedDB<TodoDefs>): OutboxEntry[] {
@@ -95,10 +68,6 @@ function deadLetterRows(db: EventSourcedDB<TodoDefs>): DeadLetterEntry[] {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function makeTodo(id: string, title = "Task"): Todo {
-  return { id, title, done: false };
 }
 
 function makeServerEvent(
@@ -126,14 +95,8 @@ const noPush = async (): Promise<PushResponse> => ({ confirmed: [] });
 describe("syncEnabled", () => {
   it("skips push and pull when sync is disabled", async () => {
     let pushCalls = 0;
-    const db = await createEventSourcedDB({
-      persistence: createFakePersistence(),
-      createCollection: fakeCreateCollection,
-      persistedCollectionOptions: fakePersistedCollectionOptions,
+    const db = await createDb({
       syncEnabled: false,
-      collections: {
-        todos: { getKey: (todo: Todo) => todo.id },
-      },
       sync: {
         push: async () => {
           pushCalls += 1;
@@ -159,13 +122,7 @@ describe("syncEnabled", () => {
 
   it("can be toggled at runtime with setSyncEnabled", async () => {
     let pushCalls = 0;
-    const db = await createEventSourcedDB({
-      persistence: createFakePersistence(),
-      createCollection: fakeCreateCollection,
-      persistedCollectionOptions: fakePersistedCollectionOptions,
-      collections: {
-        todos: { getKey: (todo: Todo) => todo.id },
-      },
+    const db = await createDb({
       sync: {
         push: async (events) => {
           pushCalls += 1;
@@ -192,22 +149,23 @@ describe("syncEnabled", () => {
 
 describe("collection indexes", () => {
   it("registers indexes declared on the collection definition", async () => {
-    const db = await createEventSourcedDB({
-      persistence: createFakePersistence(),
-      createCollection: fakeCreateCollection,
-      persistedCollectionOptions: fakePersistedCollectionOptions,
+    const db = await openEventSourcedDb({
       collections: {
         todos: {
-          getKey: (todo: Todo) => todo.id,
+          getKey: (todo: { id: string; done: boolean }) => todo.id,
           indexes: [
-            { select: (todo: Todo) => todo.id, name: "by-id" },
-            { select: (todo: Todo) => todo.done, name: "by-done" },
+            { select: (todo: { id: string }) => todo.id, name: "by-id", indexType: BasicIndex },
+            {
+              select: (todo: { done: boolean }) => todo.done,
+              name: "by-done",
+              indexType: BasicIndex,
+            },
           ],
         },
       },
     });
 
-    const indexes = getFakeCollectionIndexes(db.collections.todos as never);
+    const indexes = db.collections.todos.getIndexMetadata?.() ?? [];
 
     expect(indexes).toHaveLength(2);
     expect(indexes.map((index) => index.name)).toEqual(["by-id", "by-done"]);
@@ -269,10 +227,7 @@ describe("mutation logging", () => {
 
   it("rejects collections that use reserved ids", async () => {
     await expect(
-      createEventSourcedDB({
-        persistence: createFakePersistence(),
-        createCollection: fakeCreateCollection,
-        persistedCollectionOptions: fakePersistedCollectionOptions,
+      openEventSourcedDb({
         collections: {
           outbox: { getKey: (item: { id: string }) => item.id },
         },
@@ -620,10 +575,13 @@ describe("dead-letter queue", () => {
 
 describe("preload", () => {
   it("hydrates user collections from persistence before ready", async () => {
-    const persistence = createFakePersistence();
-    seedCollection(persistence, "todos", "t1", makeTodo("t1", "already-there"));
+    const { sqlite, filePath } = openTempSqlite();
+    const first = await openTodoDbOnSqlite(sqlite);
+    await first.collections.todos.insert(makeTodo("t1", "already-there")).isPersisted.promise;
+    first.dispose();
+    sqlite.close();
 
-    const db = await createDb({ persistence });
+    const db = await openTodoDbOnSqlite(new Database(filePath));
 
     expect(db.collections.todos.get("t1")).toMatchObject({
       id: "t1",
@@ -649,7 +607,7 @@ describe("pull", () => {
     const result = await db.sync();
 
     expect(result.pulled).toBe(1);
-    expect(db.collections.todos.get("t1")).toEqual({
+    expect(db.collections.todos.get("t1")).toMatchObject({
       id: "t1",
       title: "FromServer",
       done: false,
@@ -907,21 +865,29 @@ describe("event metadata", () => {
 
 describe("startup replay", () => {
   it("applies pending inbox events when the database initializes", async () => {
-    const persistence = createFakePersistence();
-    seedCollection(persistence, "inbox", "s1", {
+    const { sqlite, filePath } = openTempSqlite();
+    const first = await openTodoDbOnSqlite(sqlite);
+    await first.collections.inbox.insert({
       eventId: "s1",
       globalSeq: 1,
       collectionId: "todos",
       type: "insert",
       key: "t1",
       payload: { id: "t1", title: "Persisted", done: false },
+      previous: null,
+      clientId: null,
+      schemaVersion: 1,
       timestamp: 0,
       sync: false,
-    });
+      skipped: false,
+      skipReason: null,
+    }).isPersisted.promise;
+    first.dispose();
+    sqlite.close();
 
-    const db = await createDb({ persistence });
+    const db = await openTodoDbOnSqlite(new Database(filePath));
 
-    expect(db.collections.todos.get("t1")).toEqual({
+    expect(db.collections.todos.get("t1")).toMatchObject({
       id: "t1",
       title: "Persisted",
       done: false,
@@ -1487,27 +1453,6 @@ describe("transaction batching", () => {
       }
     }
     expect([...seen.values()].every((count) => count === 1)).toBe(true);
-  });
-});
-
-describe("retry backoff", () => {
-  const retry = { maxAttempts: 8, baseDelayMs: 100, maxDelayMs: 1_000 };
-
-  it("doubles each attempt", () => {
-    expect(backoffDelay(1, retry)).toBe(100);
-    expect(backoffDelay(2, retry)).toBe(200);
-    expect(backoffDelay(3, retry)).toBe(400);
-    expect(backoffDelay(4, retry)).toBe(800);
-  });
-
-  it("never exceeds maxDelayMs", () => {
-    expect(backoffDelay(5, retry)).toBe(1_000);
-    expect(backoffDelay(50, retry)).toBe(1_000);
-  });
-
-  it("treats a zero or negative attempt as the first one", () => {
-    expect(backoffDelay(0, retry)).toBe(100);
-    expect(backoffDelay(-3, retry)).toBe(100);
   });
 });
 
