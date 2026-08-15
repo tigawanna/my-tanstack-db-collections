@@ -1,0 +1,103 @@
+{
+  "name": "event-sourced-collection",
+  "version": "0.0.7",
+  "description": "Event-sourced local-first database built on TanStack DB persistence",
+  "keywords": [
+    "event-sourcing",
+    "local-first",
+    "offline",
+    "offline-first",
+    "sqlite",
+    "sync",
+    "tanstack",
+    "tanstack-db"
+  ],
+  "bugs": {
+    "url": "https://github.com/tigawanna/locally-first/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tigawanna/locally-first.git"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "examples",
+    "LICENSE",
+    "README.md",
+    "ARCHITECTURE.md",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./browser": "./dist/browser.mjs",
+    "./react": "./dist/react.mjs",
+    "./react-native": "./dist/react-native.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vp test run",
+    "check-types": "tsgo --noEmit",
+    "prepublishOnly": "pnpm run build",
+    "check-exports": "attw --pack . --profile node16 --ignore-rules cjs-resolves-to-esm",
+    "postbuild": "npm run check-exports",
+    "release": "changeset publish --no-git-checks"
+  },
+  "dependencies": {
+    "uuidv7": "^1.2.1"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.4",
+    "@changesets/cli": "^2.31.0",
+    "@repo/typescript-config": "workspace:*",
+    "@tanstack/browser-db-sqlite-persistence": "^0.2.1",
+    "@tanstack/db": "^0.6.9",
+    "@tanstack/db-sqlite-persistence-core": "^0.2.1",
+    "@types/react": "^19.2.14",
+    "react": "^19.2.0",
+    "tsdown": "^0.22.3",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@tanstack/browser-db-sqlite-persistence": ">=0.2.0",
+    "@tanstack/db": ">=0.6.0",
+    "@tanstack/db-sqlite-persistence-core": ">=0.2.0",
+    "@tanstack/expo-db-sqlite-persistence": ">=0.2.0",
+    "@tanstack/node-db-sqlite-persistence": ">=0.2.0",
+    "@tanstack/react-native-db-sqlite-persistence": ">=0.2.0",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/browser-db-sqlite-persistence": {
+      "optional": true
+    },
+    "@tanstack/react-native-db-sqlite-persistence": {
+      "optional": true
+    },
+    "@tanstack/expo-db-sqlite-persistence": {
+      "optional": true
+    },
+    "@tanstack/node-db-sqlite-persistence": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
