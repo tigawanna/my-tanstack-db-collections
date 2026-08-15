@@ -1,5 +1,5 @@
 {
-  "name": "my-tanstack-db-collections",
+  "name": "locally-first",
   "private": true,
   "scripts": {
     "build": "turbo run build",

@@ -14,12 +14,12 @@
     "sync"
   ],
   "bugs": {
-    "url": "https://github.com/tigawanna/my-tanstack-db-collections/issues"
+    "url": "https://github.com/tigawanna/locally-first/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tigawanna/my-tanstack-db-collections.git"
+    "url": "https://github.com/tigawanna/locally-first.git"
   },
   "files": [
     "dist",
