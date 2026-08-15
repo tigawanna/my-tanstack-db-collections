@@ -20,16 +20,16 @@ export async function createBrowserPlatform(
 ): Promise<BrowserPlatformResult> {
   const database = await deps.openBrowserWASQLiteOPFSDatabase({
     databaseName: config.databaseName,
-  });
+  } as never);
 
   const coordinator = new deps.BrowserCollectionCoordinator({
     dbName: config.coordinatorDbName ?? config.databaseName.replace(/\.sqlite$/, ""),
-  });
+  } as never);
 
   const persistence = deps.createBrowserWASQLitePersistence({
     database,
     coordinator,
-  });
+  } as never);
 
   const driver = new BrowserWASQLiteDriver(database);
 

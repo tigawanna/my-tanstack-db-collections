@@ -10,53 +10,38 @@ import type {
   PersistedCollectionOptionsFn,
 } from "../persisted-collection";
 import type { EventSourcedSharedOptions, PersistedCollectionPersistence } from "../types";
-import { createReactNativePlatform } from "./react-native";
+import { createNodePlatform } from "./node";
 
 type CollectionDefConstraint = {
   getKey: (state: never) => string | number;
 };
 
-export type ReactNativeEventSourcedModules = {
-  createReactNativeSQLitePersistence: (options: {
-    database: never;
-  }) => PersistedCollectionPersistence;
-  /** Already-opened op-sqlite (or compatible) database. */
+export type NodeEventSourcedModules = {
+  createNodeSQLitePersistence: (options: { database: never }) => PersistedCollectionPersistence;
+  /** Already-opened better-sqlite3 (or compatible) database. */
   database: unknown;
   createCollection: InjectedCreateCollection;
   persistedCollectionOptions: InjectedModuleFn;
 };
 
-/**
- * React Native entry-point config. Shared sync/lifecycle fields come from
- * {@link EventSourcedSharedOptions} (hover those properties for docs).
- * Deep guide: `docs/usage.md`.
- */
-export type ReactNativeEventSourcedDBConfig<TDefs extends Record<string, CollectionDefConstraint>> =
+export type NodeEventSourcedDBConfig<TDefs extends Record<string, CollectionDefConstraint>> =
   EventSourcedSharedOptions & {
     collections: TDefs;
     /**
-     * React Native persistence modules from
-     * `@tanstack/react-native-db-sqlite-persistence` plus `createCollection`.
-     * Pass the imported bindings directly, or a function to delay native SQLite.
+     * Node persistence modules. Pass the imported bindings directly, or a
+     * function if you still want to delay loading `better-sqlite3`.
      */
-    modules: ModulesInput<ReactNativeEventSourcedModules>;
+    modules: ModulesInput<NodeEventSourcedModules>;
   };
 
-export type { EventSourcedDBHandle as ReactNativeEventSourcedDBHandle } from "../create-event-sourced-db-handle";
-
-/**
- * React Native–flavoured event-sourced DB, returned as a lazy singleton.
- *
- * @param config - See {@link ReactNativeEventSourcedDBConfig} for every option.
- */
-export function createReactNativeEventSourcedDB<
+export function createNodeEventSourcedDB<
   const TDefs extends Record<string, CollectionDefConstraint>,
->(config: ReactNativeEventSourcedDBConfig<TDefs>) {
+>(config: NodeEventSourcedDBConfig<TDefs>) {
   return createEventSourcedDBHandle<TDefs>({
     setup: async () => {
       const modules = await resolveModules(config.modules);
-      const platform = createReactNativePlatform(
-        { createReactNativeSQLitePersistence: modules.createReactNativeSQLitePersistence },
+      const platform = createNodePlatform(
+        { createNodeSQLitePersistence: modules.createNodeSQLitePersistence },
         { database: modules.database },
       );
 
@@ -82,6 +67,10 @@ export function createReactNativeEventSourcedDB<
         hooks: config.hooks,
         lock: config.lock,
         lockName: config.lockName,
+        close: () => {
+          const database = modules.database as { close?: () => void };
+          database.close?.();
+        },
       };
     },
   });

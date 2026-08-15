@@ -14,13 +14,13 @@ type TodoDefs = { todos: { getKey: (todo: Todo) => string } };
 
 const collections: TodoDefs = { todos: { getKey: (todo: Todo) => todo.id } };
 
-function createLoad() {
+function createModules() {
   const persistence = createFakePersistence();
   const coordinatorDispose = vi.fn();
   const databaseClose = vi.fn();
 
-  const load = vi.fn(async (): Promise<BrowserEventSourcedModules> => {
-    const modules = {
+  const modules = vi.fn(async (): Promise<BrowserEventSourcedModules> => {
+    return {
       openBrowserWASQLiteOPFSDatabase: async () => ({
         execute: async () => [],
         close: databaseClose,
@@ -32,27 +32,26 @@ function createLoad() {
       },
       createCollection: fakeCreateCollection,
       persistedCollectionOptions: fakePersistedCollectionOptions,
-    };
-    return modules as unknown as BrowserEventSourcedModules;
+    } as unknown as BrowserEventSourcedModules;
   });
 
-  return { load, coordinatorDispose, databaseClose };
+  return { modules, coordinatorDispose, databaseClose };
 }
 
 describe("createBrowserEventSourcedDB", () => {
   it("initializes the database once and exposes user and reserved collections", async () => {
     vi.stubGlobal("window", {});
-    const { load } = createLoad();
+    const { modules } = createModules();
 
     const { ensureDb, db } = createBrowserEventSourcedDB<TodoDefs>({
       databaseName: "test.sqlite",
       collections,
-      load,
+      modules,
     });
 
     const database = await ensureDb();
 
-    expect(load).toHaveBeenCalledTimes(1);
+    expect(modules).toHaveBeenCalledTimes(1);
     expect(database.collections.todos).toBeDefined();
     expect(database.collections.outbox).toBeDefined();
     expect(database.collections.inbox).toBeDefined();
@@ -63,27 +62,27 @@ describe("createBrowserEventSourcedDB", () => {
 
   it("deduplicates concurrent ensureDb calls", async () => {
     vi.stubGlobal("window", {});
-    const { load } = createLoad();
+    const { modules } = createModules();
 
     const { ensureDb } = createBrowserEventSourcedDB<TodoDefs>({
       databaseName: "test.sqlite",
       collections,
-      load,
+      modules,
     });
 
     await Promise.all([ensureDb(), ensureDb()]);
 
-    expect(load).toHaveBeenCalledTimes(1);
+    expect(modules).toHaveBeenCalledTimes(1);
   });
 
   it("throws when db is accessed before ensureDb", () => {
     vi.stubGlobal("window", {});
-    const { load } = createLoad();
+    const { modules } = createModules();
 
     const { db } = createBrowserEventSourcedDB<TodoDefs>({
       databaseName: "test.sqlite",
       collections,
-      load,
+      modules,
     });
 
     expect(() => db.collections).toThrow(/Call ensureDb/);
@@ -91,12 +90,12 @@ describe("createBrowserEventSourcedDB", () => {
 
   it("closes the platform and re-initializes on the next ensureDb", async () => {
     vi.stubGlobal("window", {});
-    const { load, coordinatorDispose, databaseClose } = createLoad();
+    const { modules, coordinatorDispose, databaseClose } = createModules();
 
     const { ensureDb, close } = createBrowserEventSourcedDB<TodoDefs>({
       databaseName: "test.sqlite",
       collections,
-      load,
+      modules,
     });
 
     await ensureDb();
@@ -106,19 +105,19 @@ describe("createBrowserEventSourcedDB", () => {
     expect(databaseClose).toHaveBeenCalledTimes(1);
 
     await ensureDb();
-    expect(load).toHaveBeenCalledTimes(2);
+    expect(modules).toHaveBeenCalledTimes(2);
   });
 
   it("rejects initialization outside a browser environment", async () => {
-    const { load } = createLoad();
+    const { modules } = createModules();
 
     const { ensureDb } = createBrowserEventSourcedDB<TodoDefs>({
       databaseName: "test.sqlite",
       collections,
-      load,
+      modules,
     });
 
     await expect(ensureDb()).rejects.toThrow(/browser environment/);
-    expect(load).not.toHaveBeenCalled();
+    expect(modules).not.toHaveBeenCalled();
   });
 });

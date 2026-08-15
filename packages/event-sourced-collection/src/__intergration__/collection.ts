@@ -1,12 +1,18 @@
 import { BasicIndex } from "@tanstack/db";
+import { createCollection } from "@tanstack/db";
+import {
+  createNodeSQLitePersistence,
+  persistedCollectionOptions,
+} from "@tanstack/node-db-sqlite-persistence";
+import Database from "better-sqlite3";
 import type {
   CollectionDef,
   EventSourcedDB,
   OutboundEvent,
   PullResponse,
   PushResponse,
-} from "event-sourced-collection";
-import { createBrowserEventSourcedDB } from "event-sourced-collection/browser";
+} from "../types";
+import { createNodeEventSourcedDB } from "../node";
 
 // --- Row types (one per collection) ---
 
@@ -37,12 +43,10 @@ export type AppDb = EventSourcedDB<AppCollectionDefs>;
 
 // --- Sync transport (runs when sync is enabled) ---
 
-const getAccessToken = () => localStorage.getItem("accessToken") ?? "";
-
 async function pushEvents(events: ReadonlyArray<OutboundEvent>): Promise<PushResponse> {
   const response = await fetch("/api/sync/events", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getAccessToken()}` },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(events),
   });
   if (!response.ok) throw new Error(`Push failed: ${response.status}`);
@@ -51,18 +55,15 @@ async function pushEvents(events: ReadonlyArray<OutboundEvent>): Promise<PushRes
 
 async function pullEvents({ since }: { since: number }): Promise<PullResponse> {
   const response = await fetch(`/api/sync/events?since=${since}`, {
-    headers: { Accept: "application/json", Authorization: `Bearer ${getAccessToken()}` },
+    headers: { Accept: "application/json" },
   });
   if (!response.ok) throw new Error(`Pull failed: ${response.status}`);
   return response.json();
 }
 
-// --- DB init: lazy singleton; db proxy forwards after ensureDb() ---
+const sqlite = new Database("my-app.sqlite");
 
-const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
-  databaseName: "my-app.sqlite",
-  //   debug: import.meta.env.DEV,
-
+const { ensureDb, db } = createNodeEventSourcedDB<AppCollectionDefs>({
   collections: {
     users: {
       getKey: (user: User) => user.id,
@@ -80,39 +81,14 @@ const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
     settings: { getKey: (settings: AppSettings) => settings.id },
   },
 
-  syncEnabled: true, // initial default; users can toggle at runtime (see app-settings.ts)
+  syncEnabled: true,
   sync: { pushEvents, pullEvents },
 
-  load: async () => {
-    const { createCollection } = await import("@tanstack/db");
-    // const {
-    //   BrowserCollectionCoordinator,
-    //   createBrowserWASQLitePersistence,
-    //   openBrowserWASQLiteOPFSDatabase,
-    //   persistedCollectionOptions,
-    // } = await import("@tanstack/browser-db-sqlite-persistence");
-
-    const {
-      createNodeSQLitePersistence,
-      DEFAULT_APPLIED_TX_PRUNE_MAX_AGE_SECONDS,
-      DEFAULT_APPLIED_TX_PRUNE_MAX_ROWS,
-      persistedCollectionOptions,
-    } = await import("@tanstack/node-db-sqlite-persistence");
-
-    // const {
-    //   createReactNativeSQLitePersistence,
-    //   DEFAULT_APPLIED_TX_PRUNE_MAX_AGE_SECONDS,
-    //   DEFAULT_APPLIED_TX_PRUNE_MAX_ROWS,
-    //   persistedCollectionOptions,
-    // } = await import("@tanstack/react-native-db-sqlite-persistence");
-
-    return {
-      //   openBrowserWASQLiteOPFSDatabase,
-      //   createBrowserWASQLitePersistence,
-      //   BrowserCollectionCoordinator,
-      createCollection,
-      persistedCollectionOptions,
-    };
+  modules: {
+    database: sqlite,
+    createNodeSQLitePersistence,
+    createCollection,
+    persistedCollectionOptions,
   },
 });
 

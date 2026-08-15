@@ -1,24 +1,26 @@
-import { createEventSourcedDB } from "../create-event-sourced-db";
-import { createLazySingleton } from "../lazy-singleton";
-import type { CreateCollectionFn, PersistedCollectionOptionsFn } from "../persisted-collection";
-import type { EventSourcedDB, EventSourcedSharedOptions, SyncLock } from "../types";
+import {
+  createEventSourcedDBHandle,
+  resolveModules,
+  type ModulesInput,
+} from "../create-event-sourced-db-handle";
+import type {
+  CreateCollectionFn,
+  InjectedCreateCollection,
+  InjectedModuleFn,
+  PersistedCollectionOptionsFn,
+} from "../persisted-collection";
+import type { EventSourcedSharedOptions, SyncLock } from "../types";
 import { createBrowserPlatform } from "./browser";
 import type { BrowserPlatformDeps } from "./browser-types";
 import { createWebLocksSyncLock } from "./web-locks";
 
 type CollectionDefConstraint = {
   getKey: (state: never) => string | number;
-  schemaVersion?: number;
-  indexes?: ReadonlyArray<{
-    select: (row: never) => unknown;
-    name?: string;
-    indexType?: import("@tanstack/db").IndexConstructor<string | number>;
-  }>;
 };
 
 export type BrowserEventSourcedModules = BrowserPlatformDeps & {
-  createCollection: CreateCollectionFn;
-  persistedCollectionOptions: PersistedCollectionOptionsFn;
+  createCollection: InjectedCreateCollection;
+  persistedCollectionOptions: InjectedModuleFn;
 };
 
 /**
@@ -44,12 +46,12 @@ export type BrowserEventSourcedDBConfig<TDefs extends Record<string, CollectionD
      */
     coordinatorDbName?: string;
     /**
-     * Lazy-loads browser platform modules (`openBrowserWASQLiteOPFSDatabase`,
-     * `createBrowserWASQLitePersistence`, `BrowserCollectionCoordinator`,
-     * `createCollection`, `persistedCollectionOptions`). Call this from a
-     * dynamic `import()` so the SQLite WASM payload stays out of the critical path.
+     * Browser OPFS persistence modules from
+     * `@tanstack/browser-db-sqlite-persistence` plus `createCollection`.
+     * Pass the imported bindings directly, or a function to keep WASM off the
+     * critical path.
      */
-    load: () => Promise<BrowserEventSourcedModules>;
+    modules: ModulesInput<BrowserEventSourcedModules>;
     /**
      * Defaults to a Web Locks–backed lock so only one tab syncs at a time.
      * Pass `null` to opt out and let every tab sync independently.
@@ -57,17 +59,7 @@ export type BrowserEventSourcedDBConfig<TDefs extends Record<string, CollectionD
     lock?: SyncLock | null;
   };
 
-export type BrowserEventSourcedDBHandle<TDefs extends Record<string, CollectionDefConstraint>> = {
-  /** Opens (or returns) the singleton DB. Call once at app startup before using `db`. */
-  ensureDb: () => Promise<EventSourcedDB<TDefs>>;
-  /**
-   * Proxy that forwards to the live DB after `ensureDb()` resolves. Accessing a
-   * property before initialization throws.
-   */
-  db: EventSourcedDB<TDefs>;
-  /** Disposes the DB, closes the platform, and resets the singleton. */
-  close: () => Promise<void>;
-};
+export type { EventSourcedDBHandle as BrowserEventSourcedDBHandle } from "../create-event-sourced-db-handle";
 
 /**
  * Browser-flavoured event-sourced DB: OPFS SQLite + optional Web Locks sync
@@ -77,76 +69,50 @@ export type BrowserEventSourcedDBHandle<TDefs extends Record<string, CollectionD
  */
 export function createBrowserEventSourcedDB<
   const TDefs extends Record<string, CollectionDefConstraint>,
->(config: BrowserEventSourcedDBConfig<TDefs>): BrowserEventSourcedDBHandle<TDefs> {
-  let activeDb: EventSourcedDB<TDefs> | null = null;
-  let closePlatform: (() => Promise<void>) | null = null;
-
-  const factory = async (): Promise<EventSourcedDB<TDefs>> => {
-    const modules = await config.load();
-
-    const platform = await createBrowserPlatform(
-      {
-        openBrowserWASQLiteOPFSDatabase: modules.openBrowserWASQLiteOPFSDatabase,
-        createBrowserWASQLitePersistence: modules.createBrowserWASQLitePersistence,
-        BrowserCollectionCoordinator: modules.BrowserCollectionCoordinator,
-      },
-      {
-        databaseName: config.databaseName,
-        coordinatorDbName: config.coordinatorDbName,
-      },
-    );
-
-    closePlatform = platform.close;
-
-    const database = await createEventSourcedDB<TDefs>({
-      persistence: platform.persistence,
-      createCollection: modules.createCollection,
-      persistedCollectionOptions: modules.persistedCollectionOptions,
-      collections: config.collections,
-      sync: config.sync,
-      syncEnabled: config.syncEnabled,
-      schemaVersion: config.schemaVersion,
-      debug: config.debug,
-      clientId: config.clientId,
-      unknownEventHandling: config.unknownEventHandling,
-      pullOverlap: config.pullOverlap,
-      eventSchemaVersion: config.eventSchemaVersion,
-      upcastEvent: config.upcastEvent,
-      retry: config.retry,
-      pushBatchSize: config.pushBatchSize,
-      backendMismatch: config.backendMismatch,
-      conflictDetection: config.conflictDetection,
-      hooks: config.hooks,
-      lock: config.lock === null ? undefined : (config.lock ?? createWebLocksSyncLock()),
-      lockName: config.databaseName,
-    });
-
-    activeDb = database;
-    return database;
-  };
-
-  const singleton = createLazySingleton<EventSourcedDB<TDefs>>(factory, {
+>(config: BrowserEventSourcedDBConfig<TDefs>) {
+  return createEventSourcedDBHandle<TDefs>({
     guard: assertBrowserEnvironment,
-    notInitializedMessage: "Event-sourced DB is not initialized. Call ensureDb() before using db.",
+    setup: async () => {
+      const modules = await resolveModules(config.modules);
+
+      const platform = await createBrowserPlatform(
+        {
+          openBrowserWASQLiteOPFSDatabase: modules.openBrowserWASQLiteOPFSDatabase,
+          createBrowserWASQLitePersistence: modules.createBrowserWASQLitePersistence,
+          BrowserCollectionCoordinator: modules.BrowserCollectionCoordinator,
+        },
+        {
+          databaseName: config.databaseName,
+          coordinatorDbName: config.coordinatorDbName,
+        },
+      );
+
+      return {
+        persistence: platform.persistence,
+        createCollection: modules.createCollection as CreateCollectionFn,
+        persistedCollectionOptions:
+          modules.persistedCollectionOptions as PersistedCollectionOptionsFn,
+        collections: config.collections,
+        sync: config.sync,
+        syncEnabled: config.syncEnabled,
+        schemaVersion: config.schemaVersion,
+        debug: config.debug,
+        clientId: config.clientId,
+        unknownEventHandling: config.unknownEventHandling,
+        pullOverlap: config.pullOverlap,
+        eventSchemaVersion: config.eventSchemaVersion,
+        upcastEvent: config.upcastEvent,
+        retry: config.retry,
+        pushBatchSize: config.pushBatchSize,
+        backendMismatch: config.backendMismatch,
+        conflictDetection: config.conflictDetection,
+        hooks: config.hooks,
+        lock: config.lock === null ? undefined : (config.lock ?? createWebLocksSyncLock()),
+        lockName: config.databaseName,
+        close: platform.close,
+      };
+    },
   });
-
-  const close = async (): Promise<void> => {
-    if (activeDb) {
-      activeDb.dispose();
-      activeDb = null;
-    }
-    if (closePlatform) {
-      await closePlatform();
-      closePlatform = null;
-    }
-    singleton.reset();
-  };
-
-  return {
-    ensureDb: singleton.ensure,
-    db: singleton.proxy,
-    close,
-  };
 }
 
 function assertBrowserEnvironment(): void {

@@ -1,4 +1,4 @@
-import type { Collection, IndexConstructor } from "@tanstack/db";
+import type { Collection } from "@tanstack/db";
 
 import {
   DEADLETTER_ID,
@@ -64,7 +64,7 @@ type CollectionDefConstraint = {
   indexes?: ReadonlyArray<{
     select: (row: never) => unknown;
     name?: string;
-    indexType?: IndexConstructor<string | number>;
+    indexType?: new (id: number, expression: never, name?: string, options?: never) => unknown;
   }>;
 };
 
@@ -108,8 +108,9 @@ function emptyResult(overrides: Partial<SyncResult> = {}): SyncResult {
 
 /**
  * Low-level factory: wires persistence, collections, outbox/inbox, and sync.
- * Prefer `createBrowserEventSourcedDB` / `createReactNativeEventSourcedDB` unless
- * you are supplying your own persistence.
+ * Prefer `createEventSourcedDBHandle` or a platform helper
+ * (`createBrowserEventSourcedDB`, `createNodeEventSourcedDB`,
+ * `createReactNativeEventSourcedDB`) unless you are supplying your own persistence.
  *
  * @param config - See {@link EventSourcedDBConfig} for every option.
  */
@@ -815,7 +816,7 @@ type IndexableCollection = {
     indexCallback: (row: Record<string, unknown>) => unknown,
     config?: {
       name?: string;
-      indexType?: IndexConstructor<string | number>;
+      indexType?: new (id: number, expression: never, name?: string, options?: never) => unknown;
     },
   ) => unknown;
   getIndexMetadata?: () => ReadonlyArray<unknown>;

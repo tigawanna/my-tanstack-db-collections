@@ -1,4 +1,5 @@
 import { ilike } from "@tanstack/db";
+import type { Collection } from "@tanstack/db";
 import { useLiveQuery } from "@tanstack/react-db";
 import { getRouteApi } from "@tanstack/react-router";
 import { MoreHorizontal, StickyNote } from "lucide-react";
@@ -40,7 +41,7 @@ export function NotesList() {
 
   const { data: notes, isLoading } = useLiveQuery(
     (query) => {
-      const base = query.from({ todo: db.collections.todos });
+      const base = query.from({ todo: db.collections.todos as unknown as Collection<Todo> });
       if (!keyword) return base;
       return base.where(({ todo }) => ilike(todo.title, `%${keyword}%`));
     },

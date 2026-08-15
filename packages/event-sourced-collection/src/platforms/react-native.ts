@@ -1,17 +1,16 @@
-import type { PersistedCollectionPersistence, SQLiteDriver } from "../types";
+import type { PersistedCollectionPersistence } from "../types";
 
 export type ReactNativePlatformDeps = {
   createReactNativeSQLitePersistence: (options: {
-    database: SQLiteDriver;
+    database: never;
   }) => PersistedCollectionPersistence;
 };
 
 export type ReactNativePlatformConfig = {
-  database: SQLiteDriver;
+  database: unknown;
 };
 
 export type ReactNativePlatformResult = {
-  driver: SQLiteDriver;
   persistence: PersistedCollectionPersistence;
 };
 
@@ -19,12 +18,9 @@ export function createReactNativePlatform(
   deps: ReactNativePlatformDeps,
   config: ReactNativePlatformConfig,
 ): ReactNativePlatformResult {
-  const persistence = deps.createReactNativeSQLitePersistence({
-    database: config.database,
-  });
-
   return {
-    driver: config.database,
-    persistence,
+    persistence: deps.createReactNativeSQLitePersistence({
+      database: config.database as never,
+    }),
   };
 }

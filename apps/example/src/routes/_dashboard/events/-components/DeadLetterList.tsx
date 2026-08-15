@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { Collection } from "@tanstack/db";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { DeadLetterEntry } from "event-sourced-collection";
 import { Inbox, RotateCcw, Trash2 } from "lucide-react";
@@ -52,7 +53,7 @@ export function DeadLetterList() {
   const { data, isLoading } = useLiveQuery(
     (query) =>
       query
-        .from({ event: db.collections.deadletter })
+        .from({ event: db.collections.deadletter as unknown as Collection<DeadLetterEntry> })
         .orderBy(({ event }) => event.localSeq, "desc")
         .limit(perPage + 1)
         .offset(offset),

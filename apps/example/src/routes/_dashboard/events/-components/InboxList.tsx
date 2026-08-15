@@ -1,5 +1,7 @@
 import { useState } from "react";
+import type { Collection } from "@tanstack/db";
 import { useLiveInfiniteQuery } from "@tanstack/react-db";
+import type { InboxEntry } from "event-sourced-collection";
 
 import {
   Pagination,
@@ -20,7 +22,9 @@ export function InboxList() {
 
   const { pages, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLiveInfiniteQuery(
     (query) =>
-      query.from({ event: db.collections.inbox }).orderBy(({ event }) => event.globalSeq, "desc"),
+      query
+        .from({ event: db.collections.inbox as unknown as Collection<InboxEntry> })
+        .orderBy(({ event }) => event.globalSeq, "desc"),
     {
       pageSize: INBOX_PAGE_SIZE,
       getNextPageParam: (lastPage, allPages) =>

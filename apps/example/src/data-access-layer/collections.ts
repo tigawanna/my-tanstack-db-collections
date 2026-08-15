@@ -205,8 +205,8 @@ const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
 
   hooks: syncHooks,
 
-  // Dynamic imports keep SSR bundles from loading wa-sqlite/OPFS until first ensureDb().
-  load: async () => {
+  // Function form keeps SSR bundles from loading wa-sqlite/OPFS until first ensureDb().
+  modules: async () => {
     const { createCollection } = await import("@tanstack/react-db");
     const {
       BrowserCollectionCoordinator,

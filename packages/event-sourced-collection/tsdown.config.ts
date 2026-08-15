@@ -1,7 +1,7 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/browser.ts", "src/react.ts", "src/react-native.ts"],
+  entry: ["src/index.ts", "src/browser.ts", "src/node.ts", "src/react.ts", "src/react-native.ts"],
   format: ["esm"],
   dts: true,
   clean: true,

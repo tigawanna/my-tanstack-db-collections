@@ -9,3 +9,7 @@ export type PersistedCollectionOptionsFn = typeof persistedCollectionOptions;
 export type CreateCollectionFn = <T extends object, TKey extends string | number>(
   options: CollectionConfig<T, TKey, never, UtilsRecord & PersistedCollectionUtils>,
 ) => Collection<T, TKey>;
+
+export type InjectedModuleFn = (...args: never[]) => unknown;
+
+export type InjectedCreateCollection = InjectedModuleFn;

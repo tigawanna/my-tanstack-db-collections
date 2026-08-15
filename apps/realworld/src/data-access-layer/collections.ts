@@ -187,7 +187,7 @@ const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
   pushBatchSize: 100,
   backendMismatch: "resetCursor",
   hooks: syncHooks,
-  load: async () => {
+  modules: async () => {
     const { createCollection } = await import("@tanstack/react-db");
     const {
       BrowserCollectionCoordinator,

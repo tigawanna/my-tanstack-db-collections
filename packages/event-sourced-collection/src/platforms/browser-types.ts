@@ -1,28 +1,18 @@
-import type {
-  BrowserCollectionCoordinatorOptions,
-  BrowserWASQLiteDatabase,
-  BrowserWASQLitePersistenceOptions,
-  OpenBrowserWASQLiteOPFSDatabaseOptions,
-} from "@tanstack/browser-db-sqlite-persistence";
-import type {
-  PersistedCollectionCoordinator,
-  PersistedCollectionPersistence,
-} from "@tanstack/db-sqlite-persistence-core";
+import type { PersistedCollectionPersistence } from "@tanstack/db-sqlite-persistence-core";
+import type { BrowserWASQLiteDatabase } from "./browser-wa-sqlite-driver";
 
-export type BrowserCoordinatorInstance = PersistedCollectionCoordinator & {
+export type BrowserCoordinatorInstance = {
   dispose: () => void;
 };
 
+/**
+ * Injected TanStack browser persistence bindings. Parameters are `never` so
+ * version-skewed `@tanstack/browser-db-sqlite-persistence` exports stay assignable.
+ */
 export type BrowserPlatformDeps = {
-  openBrowserWASQLiteOPFSDatabase: (
-    options: OpenBrowserWASQLiteOPFSDatabaseOptions,
-  ) => Promise<BrowserWASQLiteDatabase>;
-  createBrowserWASQLitePersistence: (
-    options: BrowserWASQLitePersistenceOptions,
-  ) => PersistedCollectionPersistence;
-  BrowserCollectionCoordinator: new (
-    options: BrowserCollectionCoordinatorOptions,
-  ) => BrowserCoordinatorInstance;
+  openBrowserWASQLiteOPFSDatabase: (options: never) => Promise<BrowserWASQLiteDatabase>;
+  createBrowserWASQLitePersistence: (options: never) => PersistedCollectionPersistence;
+  BrowserCollectionCoordinator: new (options: never) => BrowserCoordinatorInstance;
 };
 
 export type BrowserPlatformConfig = {

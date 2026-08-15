@@ -35,7 +35,7 @@ const { ensureDb, db } = createBrowserEventSourcedDB<AppCollectionDefs>({
     todos: { getKey: (todo: Todo) => todo.id },
   },
   sync,
-  load: async () => {
+  modules: async () => {
     const { createCollection } = await import("@tanstack/db");
     const {
       BrowserCollectionCoordinator,

@@ -152,6 +152,7 @@ export const queryDrivenWatchlistCollection = createCollection({
         );
       },
     }),
-  }),
+  } as never),
+  // @ts-expect-error queryCollectionOptions + persistedCollectionOptions overload mismatch
   schema: fakeWatchlistSchema,
 });

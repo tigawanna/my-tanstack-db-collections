@@ -35,6 +35,7 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./browser": "./dist/browser.mjs",
+    "./node": "./dist/node.mjs",
     "./react": "./dist/react.mjs",
     "./react-native": "./dist/react-native.mjs",
     "./package.json": "./package.json"
@@ -62,9 +63,10 @@
     "@repo/typescript-config": "workspace:*",
     "@tanstack/browser-db-sqlite-persistence": "^0.2.12",
     "@tanstack/db": "^0.7.2",
-    "@tanstack/react-db": "^0.2.1",
     "@tanstack/db-sqlite-persistence-core": "^0.2.12",
     "@tanstack/node-db-sqlite-persistence": "^0.2.12",
+    "@tanstack/react-db": "^0.2.1",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/react": "^19.2.14",
     "better-sqlite3": "^13.0.3",
     "react": "^19.2.0",

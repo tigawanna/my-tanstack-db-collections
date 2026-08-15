@@ -1,4 +1,10 @@
 export { createEventSourcedDB } from "./create-event-sourced-db";
+export { createEventSourcedDBHandle, resolveModules } from "./create-event-sourced-db-handle";
+export type {
+  EventSourcedDBHandle,
+  EventSourcedDBHandleSetup,
+  ModulesInput,
+} from "./create-event-sourced-db-handle";
 export { createLazySingleton } from "./lazy-singleton";
 export type { LazySingleton, LazySingletonOptions } from "./lazy-singleton";
 export { createHttpTransport, SyncPushError, SyncPullError } from "./sync";
@@ -17,6 +23,7 @@ export { createEventSourcedLogger } from "./utils/logger";
 export type {
   BackendMismatchPolicy,
   CollectionDef,
+  CollectionIndexConstructor,
   CollectionIndexDef,
   CollectionMap,
   DeadLetterDirection,
@@ -64,4 +71,9 @@ export type {
   UpcastEventFn,
 } from "./types";
 
-export type { CreateCollectionFn, PersistedCollectionOptionsFn } from "./persisted-collection";
+export type {
+  CreateCollectionFn,
+  InjectedCreateCollection,
+  InjectedModuleFn,
+  PersistedCollectionOptionsFn,
+} from "./persisted-collection";

@@ -1,4 +1,4 @@
-import type { Collection, IndexConstructor } from "@tanstack/db";
+import type { Collection } from "@tanstack/db";
 import type {
   PersistedCollectionPersistence,
   SQLiteDriver,
@@ -9,7 +9,12 @@ import type { EventSourcedLogger } from "./utils/logger";
 export type { EventSourcedLogger } from "./utils/logger";
 
 export type { SQLiteDriver, PersistedCollectionPersistence };
-export type { CreateCollectionFn, PersistedCollectionOptionsFn } from "./persisted-collection";
+export type {
+  CreateCollectionFn,
+  InjectedCreateCollection,
+  InjectedModuleFn,
+  PersistedCollectionOptionsFn,
+} from "./persisted-collection";
 
 export type MutationType = "insert" | "update" | "delete";
 export type OutboxSyncStatus = "pending" | "synced" | "failed";
@@ -279,13 +284,20 @@ export type SyncHandlersConfig = {
     | (() => Record<string, string> | Promise<Record<string, string>>);
 };
 
-export type CollectionIndexDef<TState = object, TKey extends string | number = string> = {
+export type CollectionIndexConstructor = new (
+  id: number,
+  expression: never,
+  name?: string,
+  options?: never,
+) => unknown;
+
+export type CollectionIndexDef<TState = object, _TKey extends string | number = string> = {
   /** Projection used as the index key (e.g. `(row) => row.userId`). */
   select: (row: TState) => unknown;
   /** Optional stable name for debugging / index lookup. */
   name?: string;
   /** TanStack DB index constructor; defaults to the library default index type. */
-  indexType?: IndexConstructor<TKey>;
+  indexType?: CollectionIndexConstructor;
 };
 
 export type CollectionDef<TState = object, TKey extends string | number = string> = {
@@ -320,7 +332,7 @@ type CollectionDefConstraint = {
   indexes?: ReadonlyArray<{
     select: (row: never) => unknown;
     name?: string;
-    indexType?: IndexConstructor<string | number>;
+    indexType?: CollectionIndexConstructor;
   }>;
 };
 
@@ -453,7 +465,8 @@ export type SyncStatus = {
 /**
  * Sync and lifecycle options shared by every event-sourced DB factory.
  * Declared as an interface (not a `Pick`) so property JSDoc shows in IntelliSense
- * on `createBrowserEventSourcedDB` / `createReactNativeEventSourcedDB` configs.
+ * on platform helpers (`createBrowserEventSourcedDB`, `createNodeEventSourcedDB`,
+ * `createReactNativeEventSourcedDB`) and `createEventSourcedDBHandle`.
  *
  * Deep usage guide: `docs/usage.md` in this package.
  */
@@ -577,9 +590,9 @@ export type EventSourcedOptions<TDefs extends Record<string, CollectionDefConstr
   };
 
 /**
- * Full configuration for `createEventSourcedDB`. Platform helpers such as
- * `createBrowserEventSourcedDB` / `createReactNativeEventSourcedDB` accept
- * {@link EventSourcedOptions} and supply persistence themselves.
+ * Full configuration for `createEventSourcedDB`. Platform helpers accept
+ * {@link EventSourcedOptions} plus that platform's TanStack persistence modules
+ * and supply `persistence` themselves.
  */
 export type EventSourcedDBConfig<TDefs extends Record<string, CollectionDefConstraint>> =
   EventSourcedOptions<TDefs> & {

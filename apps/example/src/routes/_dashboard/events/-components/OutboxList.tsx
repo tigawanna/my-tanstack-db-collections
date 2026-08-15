@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import type { Collection } from "@tanstack/db";
 import { useLiveQuery } from "@tanstack/react-db";
+import type { OutboxEntry } from "event-sourced-collection";
 
 import {
   Pagination,
@@ -30,7 +32,7 @@ export function OutboxList() {
   const { data, isLoading } = useLiveQuery(
     (query) =>
       query
-        .from({ event: db.collections.outbox })
+        .from({ event: db.collections.outbox as unknown as Collection<OutboxEntry> })
         .orderBy(({ event }) => event.localSeq, "desc")
         .limit(perPage + 1)
         .offset(offset),
