@@ -1,6 +1,6 @@
 # locally-first
 
-Monorepo for local-first utilities — including **event-sourced-collection** (event-sourced database on TanStack DB) and **event-sourced-drizzle** (Drizzle ORM sync engine) — plus a reference example app.
+A collection of typescriptlocal-first tools including event sourced approach using tanstack db and drizzle
 
 ## Packages
 
