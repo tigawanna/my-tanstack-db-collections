@@ -44,12 +44,14 @@ describe("node event-sourced collection (sqlite)", () => {
   });
 
   it("reloads persisted rows after close and reopen on the same file", async () => {
+    // Write through a live handle, wait until TanStack flushed to sqlite, then tear it down.
     const { sqlite, filePath } = openTempSqlite();
     const first = createNodeTodoHandle(sqlite, { clientId: "device-1" });
     await first.ensureDb();
     await first.db.collections.todos.insert(makeTodo("t1", "Persisted")).isPersisted.promise;
     await first.close();
 
+    // New connection + new EventSourcedDB on the same file — same device coming back.
     const sqlite2 = new Database(filePath);
     const second = createNodeTodoHandle(sqlite2, { clientId: "device-1" });
     await second.ensureDb();

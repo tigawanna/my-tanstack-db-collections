@@ -31,6 +31,7 @@ export type TodoDefs = {
 
 type Closeable = { close: () => Promise<void> | void };
 
+/** Every sqlite / event-sourced handle opened in a test is closed here. */
 const openHandles: Closeable[] = [];
 
 afterEach(async () => {
@@ -39,6 +40,7 @@ afterEach(async () => {
   }
 });
 
+/** Tiny fixtures so tests don't rebuild Todo rows by hand. */
 export function makeTodo(id: string, title = "Task"): Todo {
   return { id, title, done: false };
 }
@@ -56,12 +58,14 @@ export function todoRows(collection: { state: Map<string, Todo> }): Todo[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
+/** Fresh on-disk sqlite file — TanStack persistence needs a real Database. */
 export function openTempSqlite(): { sqlite: Database.Database; filePath: string } {
   const dir = mkdtempSync(join(tmpdir(), "esc-node-"));
   const filePath = join(dir, "app.sqlite");
   return { sqlite: new Database(filePath), filePath };
 }
 
+/** Register sqlite + optional EventSourcedDB.dispose() for afterEach. */
 function trackSqlite(sqlite: Database.Database, db?: { dispose: () => void }): void {
   let closed = false;
   openHandles.push({
@@ -78,6 +82,10 @@ function trackSqlite(sqlite: Database.Database, db?: { dispose: () => void }): v
   });
 }
 
+/**
+ * Node entry: createNodeEventSourcedDB. `modules` is the TanStack stack —
+ * sqlite handle, persistence factory, createCollection, persistedCollectionOptions.
+ */
 export function createNodeTodoHandle(
   sqlite: Database.Database,
   options: EventSourcedSharedOptions & { sync?: SyncTransport } = {},
@@ -98,6 +106,10 @@ export function createNodeTodoHandle(
   return handle;
 }
 
+/**
+ * Lower-level: createEventSourcedDB with TanStack persistence already built.
+ * Strips collections/persistence from `options` so tests can't override the todos wiring.
+ */
 export async function openTodoDbOnSqlite(
   sqlite: Database.Database,
   options: Partial<EventSourcedDBConfig<TodoDefs>> = {},
@@ -121,12 +133,14 @@ export async function openTodoDbOnSqlite(
   return db;
 }
 
+/** Same as openTodoDbOnSqlite, but opens a throwaway sqlite file first. */
 export async function openTodoDb(
   options: Partial<EventSourcedDBConfig<TodoDefs>> = {},
 ): Promise<EventSourcedDB<TodoDefs>> {
   return openTodoDbOnSqlite(openTempSqlite().sqlite, options);
 }
 
+/** Generic harness: any collection defs, default TanStack sqlite persistence. */
 export async function openEventSourcedDb<
   TDefs extends Record<string, { getKey: (state: never) => string | number }>,
 >(
