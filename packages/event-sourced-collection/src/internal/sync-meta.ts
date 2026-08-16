@@ -38,6 +38,25 @@ export function readBackendId(syncmeta: Collection<SyncMetaEntry, string>): stri
  * reloads. Without that, a client stops recognising its own pulled-back events
  * as soon as the outbox is pruned and will replay its own history as if it were
  * someone else's.
+ *
+ * Preference: explicit `configured` id, then the stored `syncmeta.clientId`,
+ * then `generate()`.
+ *
+ * @example First open generates and stores an id; the next open reuses it
+ * ```ts
+ * import { resolveClientId } from "./sync-meta"
+ *
+ * const clientId = await resolveClientId(
+ *   db.collections.syncmeta,
+ *   undefined,
+ *   () => crypto.randomUUID(),
+ * )
+ * // later, after close + reopen on the same file:
+ * const again = await resolveClientId(db.collections.syncmeta, undefined, () => {
+ *   throw new Error("should not generate a second id")
+ * })
+ * // again === clientId
+ * ```
  */
 export async function resolveClientId(
   syncmeta: Collection<SyncMetaEntry, string>,
@@ -60,6 +79,14 @@ export async function resolveClientId(
  * The cursor lives in `syncmeta` so the inbox can be pruned freely. Older
  * databases predate that row, so fall back to the highest resolved inbox
  * sequence and let the first successful pull persist it.
+ *
+ * @example
+ * ```ts
+ * import { readPullCursor } from "./sync-meta"
+ *
+ * const since = readPullCursor(db.collections.syncmeta, db.collections.inbox)
+ * const page = await transport.pull(since)
+ * ```
  */
 export function readPullCursor(
   syncmeta: Collection<SyncMetaEntry, string>,

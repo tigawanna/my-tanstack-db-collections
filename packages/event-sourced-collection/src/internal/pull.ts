@@ -21,6 +21,21 @@ export type PullOutcome = {
   requeued: number;
 };
 
+/**
+ * Thrown when `backendMismatch` is `"fail"` and the server reports a different
+ * `backendId` than this client last synced with (wiped or swapped event store).
+ *
+ * @example
+ * ```ts
+ * import { BackendMismatchError } from "event-sourced-collection"
+ *
+ * const result = await db.sync()
+ * const mismatch = result.errors.find((error) => error instanceof BackendMismatchError)
+ * if (mismatch) {
+ *   console.error("backend changed", mismatch.expected, mismatch.received)
+ * }
+ * ```
+ */
 export class BackendMismatchError extends Error {
   constructor(
     readonly expected: string | null,

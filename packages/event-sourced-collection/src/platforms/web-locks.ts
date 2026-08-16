@@ -13,7 +13,24 @@ function getLockManager(): LockManager | null {
   return candidate && typeof candidate.request === "function" ? candidate : null;
 }
 
-/** True when the Web Locks API is available in this context. */
+/**
+ * True when `navigator.locks` is available (modern browsers / workers).
+ *
+ * @example
+ * ```ts
+ * import { createWebLocksSyncLock, supportsWebLocks } from "event-sourced-collection"
+ * import { createBrowserEventSourcedDB } from "event-sourced-collection/browser"
+ *
+ * const lock = supportsWebLocks() ? createWebLocksSyncLock() : undefined
+ *
+ * createBrowserEventSourcedDB({
+ *   databaseName: "app.sqlite",
+ *   lock: lock ?? null,
+ *   collections: { todos: { getKey: (todo: { id: string }) => todo.id } },
+ *   modules,
+ * })
+ * ```
+ */
 export function supportsWebLocks(): boolean {
   return getLockManager() !== null;
 }
@@ -25,6 +42,26 @@ export function supportsWebLocks(): boolean {
  *
  * Falls back to always acquiring when Web Locks is unavailable (older browsers,
  * non-browser runtimes), which preserves single-context behaviour.
+ *
+ * `createBrowserEventSourcedDB` installs this as the default `lock`. Pass
+ * `lock: null` there to opt out.
+ *
+ * @example Only one tab runs `sync()`
+ * ```ts
+ * import { createWebLocksSyncLock, supportsWebLocks } from "event-sourced-collection"
+ *
+ * const lock = createWebLocksSyncLock()
+ *
+ * async function syncIfLeader() {
+ *   const outcome = await lock.tryRun("event-sourced-sync:app.sqlite", () => db.sync())
+ *   if (!outcome.acquired) return // another tab already holds the lock
+ *   return outcome.result
+ * }
+ *
+ * if (!supportsWebLocks()) {
+ *   // Node / older browsers: tryRun always acquires
+ * }
+ * ```
  */
 export function createWebLocksSyncLock(): SyncLock {
   return {

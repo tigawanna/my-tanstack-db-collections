@@ -187,7 +187,27 @@ function getPullUrl(config: SyncHandlersConfig | SyncUrlConfig): string | undefi
   return undefined;
 }
 
-/** Thrown when the HTTP push endpoint returns a non-OK status. */
+/**
+ * Thrown when the HTTP push endpoint returns a non-OK status.
+ *
+ * @example
+ * ```ts
+ * import { createHttpTransport, SyncPushError } from "event-sourced-collection"
+ *
+ * const sync = createHttpTransport({
+ *   push: "/api/sync/events",
+ *   pull: "/api/sync/events",
+ * })
+ *
+ * try {
+ *   await sync.push(events)
+ * } catch (error) {
+ *   if (error instanceof SyncPushError) {
+ *     console.error(error.status, error.body)
+ *   }
+ * }
+ * ```
+ */
 export class SyncPushError extends Error {
   constructor(
     public readonly status: number,
@@ -198,7 +218,27 @@ export class SyncPushError extends Error {
   }
 }
 
-/** Thrown when the HTTP pull endpoint returns a non-OK status. */
+/**
+ * Thrown when the HTTP pull endpoint returns a non-OK status.
+ *
+ * @example
+ * ```ts
+ * import { createHttpTransport, SyncPullError } from "event-sourced-collection"
+ *
+ * const sync = createHttpTransport({
+ *   push: "/api/sync/events",
+ *   pull: "/api/sync/events",
+ * })
+ *
+ * try {
+ *   await sync.pull(0)
+ * } catch (error) {
+ *   if (error instanceof SyncPullError) {
+ *     console.error(error.status, error.body)
+ *   }
+ * }
+ * ```
+ */
 export class SyncPullError extends Error {
   constructor(
     public readonly status: number,

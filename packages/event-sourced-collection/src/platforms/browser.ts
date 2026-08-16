@@ -14,6 +14,33 @@ export type {
 
 export type { BrowserWASQLiteDatabase } from "./browser-wa-sqlite-driver";
 
+/**
+ * Opens OPFS SQLite, a cross-tab coordinator, and TanStack persistence.
+ * Prefer {@link createBrowserEventSourcedDB}; call this only when you need the
+ * raw `persistence` / `close` pair (for example a custom handle).
+ *
+ * @example
+ * ```ts
+ * import { createBrowserPlatform } from "event-sourced-collection/browser"
+ * import {
+ *   BrowserCollectionCoordinator,
+ *   createBrowserWASQLitePersistence,
+ *   openBrowserWASQLiteOPFSDatabase,
+ * } from "@tanstack/browser-db-sqlite-persistence"
+ *
+ * const platform = await createBrowserPlatform(
+ *   {
+ *     openBrowserWASQLiteOPFSDatabase,
+ *     createBrowserWASQLitePersistence,
+ *     BrowserCollectionCoordinator,
+ *   },
+ *   { databaseName: "app.sqlite" },
+ * )
+ *
+ * // pass platform.persistence into createEventSourcedDB
+ * await platform.close()
+ * ```
+ */
 export async function createBrowserPlatform(
   deps: BrowserPlatformDeps,
   config: BrowserPlatformConfig,
