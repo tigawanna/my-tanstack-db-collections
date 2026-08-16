@@ -7,8 +7,8 @@ import {
 } from "@/fake-data/fake-atchlist";
 import { getPaginatedFakeMoviesFn } from "@/fake-data/fake-moviees";
 import { resolveSortOrder } from "@/lib/tanstack/db/pagination";
-import { parseWhereWithHandlers } from "@/lib/tanstack/db/utils";
 import { getQueryClient } from "@/lib/tanstack/query/queryclient";
+import { parseWhereWithHandlers } from "@/lib/tanstack/db/query-context-parsers";
 import { BasicIndex, createCollection, parseLoadSubsetOptions } from "@tanstack/db";
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 

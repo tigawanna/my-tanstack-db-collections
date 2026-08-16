@@ -19,6 +19,7 @@ import { Route as DashboardLogsIndexRouteImport } from './routes/_dashboard/logs
 import { Route as DashboardDefaultIndexRouteImport } from './routes/_dashboard/default/index'
 import { Route as DashboardCustomPaginationIndexRouteImport } from './routes/_dashboard/custom-pagination/index'
 import { Route as ApiSyncEventsRouteImport } from './routes/api/sync/events'
+import { Route as DashboardMoviesWithQueryRouteImport } from './routes/_dashboard/movies/with-query'
 import { Route as DashboardDefaultInfiniteRouteImport } from './routes/_dashboard/default/infinite'
 import { Route as DashboardMoviesMovieIndexRouteImport } from './routes/_dashboard/movies/$movie/index'
 
@@ -72,6 +73,12 @@ const ApiSyncEventsRoute = ApiSyncEventsRouteImport.update({
   path: '/api/sync/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardMoviesWithQueryRoute =
+  DashboardMoviesWithQueryRouteImport.update({
+    id: '/movies/with-query',
+    path: '/movies/with-query',
+    getParentRoute: () => DashboardLayoutRoute,
+  } as any)
 const DashboardDefaultInfiniteRoute =
   DashboardDefaultInfiniteRouteImport.update({
     id: '/default/infinite',
@@ -88,6 +95,7 @@ const DashboardMoviesMovieIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/default/infinite': typeof DashboardDefaultInfiniteRoute
+  '/movies/with-query': typeof DashboardMoviesWithQueryRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/default/': typeof DashboardDefaultIndexRoute
@@ -101,6 +109,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof DashboardIndexRoute
   '/default/infinite': typeof DashboardDefaultInfiniteRoute
+  '/movies/with-query': typeof DashboardMoviesWithQueryRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/custom-pagination': typeof DashboardCustomPaginationIndexRoute
   '/default': typeof DashboardDefaultIndexRoute
@@ -116,6 +125,7 @@ export interface FileRoutesById {
   '/_dashboard': typeof DashboardLayoutRouteWithChildren
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/default/infinite': typeof DashboardDefaultInfiniteRoute
+  '/_dashboard/movies/with-query': typeof DashboardMoviesWithQueryRoute
   '/api/sync/events': typeof ApiSyncEventsRoute
   '/_dashboard/custom-pagination/': typeof DashboardCustomPaginationIndexRoute
   '/_dashboard/default/': typeof DashboardDefaultIndexRoute
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/default/infinite'
+    | '/movies/with-query'
     | '/api/sync/events'
     | '/custom-pagination/'
     | '/default/'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/default/infinite'
+    | '/movies/with-query'
     | '/api/sync/events'
     | '/custom-pagination'
     | '/default'
@@ -158,6 +170,7 @@ export interface FileRouteTypes {
     | '/_dashboard'
     | '/_dashboard/'
     | '/_dashboard/default/infinite'
+    | '/_dashboard/movies/with-query'
     | '/api/sync/events'
     | '/_dashboard/custom-pagination/'
     | '/_dashboard/default/'
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSyncEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_dashboard/movies/with-query': {
+      id: '/_dashboard/movies/with-query'
+      path: '/movies/with-query'
+      fullPath: '/movies/with-query'
+      preLoaderRoute: typeof DashboardMoviesWithQueryRouteImport
+      parentRoute: typeof DashboardLayoutRoute
+    }
     '/_dashboard/default/infinite': {
       id: '/_dashboard/default/infinite'
       path: '/default/infinite'
@@ -267,6 +287,7 @@ declare module '@tanstack/react-router' {
 interface DashboardLayoutRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardDefaultInfiniteRoute: typeof DashboardDefaultInfiniteRoute
+  DashboardMoviesWithQueryRoute: typeof DashboardMoviesWithQueryRoute
   DashboardCustomPaginationIndexRoute: typeof DashboardCustomPaginationIndexRoute
   DashboardDefaultIndexRoute: typeof DashboardDefaultIndexRoute
   DashboardLogsIndexRoute: typeof DashboardLogsIndexRoute
@@ -279,6 +300,7 @@ interface DashboardLayoutRouteChildren {
 const DashboardLayoutRouteChildren: DashboardLayoutRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardDefaultInfiniteRoute: DashboardDefaultInfiniteRoute,
+  DashboardMoviesWithQueryRoute: DashboardMoviesWithQueryRoute,
   DashboardCustomPaginationIndexRoute: DashboardCustomPaginationIndexRoute,
   DashboardDefaultIndexRoute: DashboardDefaultIndexRoute,
   DashboardLogsIndexRoute: DashboardLogsIndexRoute,
