@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import type { ManualSyncResult } from "../types";
+import type { ManualSyncResult } from "../core/types";
 import { formatManualSyncMessage } from "./format-manual-sync-message";
 import type { DbWithSettings } from "./settings-collection";
 import { useSyncEnabled } from "./use-sync-enabled";

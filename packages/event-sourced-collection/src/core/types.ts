@@ -4,9 +4,9 @@ import type {
   SQLiteDriver,
 } from "@tanstack/db-sqlite-persistence-core";
 import type { CreateCollectionFn, PersistedCollectionOptionsFn } from "./persisted-collection";
-import type { EventSourcedLogger } from "./utils/logger";
+import type { EventSourcedLogger } from "../utils/logger";
 
-export type { EventSourcedLogger } from "./utils/logger";
+export type { EventSourcedLogger } from "../utils/logger";
 
 export type { SQLiteDriver, PersistedCollectionPersistence };
 export type {
@@ -23,6 +23,16 @@ export type OutboxSyncStatus = "pending" | "synced" | "failed";
  * What to do when a pulled event targets a collection this client does not know
  * about (older client, newer server). "skip" keeps the pipeline moving; "fail"
  * halts the pull so the event is retried on the next sync.
+ *
+ * @example
+ * ```ts
+ * import { createBrowserEventSourcedDB } from "event-sourced-collection/browser"
+ *
+ * createBrowserEventSourcedDB({
+ *   unknownEventHandling: "skip",
+ *   // ...
+ * })
+ * ```
  */
 export type UnknownEventHandling = "skip" | "fail";
 
@@ -206,6 +216,25 @@ export type PushResponse = {
   failed?: ReadonlyArray<PushFailure>;
 };
 
+/**
+ * Result of a pull. `cursor` should be the last `globalSeq` included in `events`
+ * (or the previous cursor when `events` is empty).
+ *
+ * @example Server handler
+ * ```ts
+ * import type { PullResponse, ServerEvent } from "event-sourced-collection"
+ *
+ * function toPullResponse(events: ServerEvent[], hasMore: boolean): PullResponse {
+ *   const last = events.at(-1)
+ *   return {
+ *     events,
+ *     cursor: last ? String(last.globalSeq) : "0",
+ *     hasMore,
+ *     backendId: "prod",
+ *   }
+ * }
+ * ```
+ */
 export type PullResponse = {
   events: ReadonlyArray<ServerEvent>;
   cursor: string;
@@ -218,19 +247,78 @@ export type PullResponse = {
   backendId?: string;
 };
 
+/**
+ * Push handler used by {@link SyncHandlersConfig.pushEvents}.
+ *
+ * @example
+ * ```ts
+ * import type { OutboundEvent, PushEventsFn, PushResponse } from "event-sourced-collection"
+ *
+ * const pushEvents: PushEventsFn = async (events: ReadonlyArray<OutboundEvent>) => {
+ *   const response = await fetch("/api/sync/events", {
+ *     method: "POST",
+ *     headers: { "Content-Type": "application/json" },
+ *     body: JSON.stringify(events),
+ *   })
+ *   return response.json() as Promise<PushResponse>
+ * }
+ * ```
+ */
 export type PushEventsFn = (
   events: ReadonlyArray<OutboundEvent>,
 ) => Promise<PushResponse | ReadonlyArray<PushConfirmation>>;
 
+/**
+ * Pull handler used by {@link SyncHandlersConfig.pullEvents}.
+ *
+ * @example
+ * ```ts
+ * import type { PullEventsFn, PullResponse } from "event-sourced-collection"
+ *
+ * const pullEvents: PullEventsFn = async ({ since }) => {
+ *   const response = await fetch(`/api/sync/events?since=${since}`)
+ *   return response.json() as Promise<PullResponse>
+ * }
+ * ```
+ */
 export type PullEventsFn = (params: { since: number }) => Promise<PullResponse>;
 
-/** Lowest-level sync backend: push outbound events and pull since a cursor. */
+/**
+ * Lowest-level sync backend: push outbound events and pull since a cursor.
+ *
+ * @example Custom transport (WebSocket, worker, in-process mock)
+ * ```ts
+ * import type { SyncTransport } from "event-sourced-collection"
+ *
+ * const sync: SyncTransport = {
+ *   push: async (events) => ({
+ *     confirmed: events.map((event, index) => ({ eventId: event.eventId, globalSeq: index + 1 })),
+ *   }),
+ *   pull: async () => ({ events: [], cursor: "0", hasMore: false }),
+ * }
+ * ```
+ */
 export type SyncTransport = {
   push: PushEventsFn;
   /** Pull events strictly after `since` (the client's last known `globalSeq`). */
   pull: (since: number) => Promise<PullResponse>;
 };
 
+/**
+ * Event a client sends to the server. Stamp `globalSeq` on accept and return it
+ * in {@link PushConfirmation}.
+ *
+ * @example Server push handler
+ * ```ts
+ * import type { OutboundEvent, PushResponse } from "event-sourced-collection"
+ *
+ * async function handlePush(events: ReadonlyArray<OutboundEvent>): Promise<PushResponse> {
+ *   return {
+ *     confirmed: events.map((event, index) => ({ eventId: event.eventId, globalSeq: index + 1 })),
+ *   }
+ * }
+ * ```
+ */
 export type OutboundEvent = {
   eventId: string;
   collectionId: string;
@@ -253,6 +341,26 @@ export type OutboundEvent = {
  * HTTP sync via URL strings. The library POSTs outbound events to `push` and
  * GETs `pull?since=N` (appending `since` if missing). Prefer this when your
  * API is a plain REST pair; use {@link SyncHandlersConfig} for custom clients.
+ *
+ * @example
+ * ```ts
+ * import { createBrowserEventSourcedDB } from "event-sourced-collection/browser"
+ *
+ * createBrowserEventSourcedDB({
+ *   databaseName: "app.sqlite",
+ *   collections: { todos: { getKey: (todo: { id: string }) => todo.id } },
+ *   sync: {
+ *     push: "/api/sync/events",
+ *     pull: "/api/sync/events",
+ *     headers: () => ({ Authorization: `Bearer ${getToken()}` }),
+ *   },
+ *   modules: async () => {
+ *     const { createCollection } = await import("@tanstack/db")
+ *     const persistence = await import("@tanstack/browser-db-sqlite-persistence")
+ *     return { createCollection, ...persistence }
+ *   },
+ * })
+ * ```
  */
 export type SyncUrlConfig = {
   /** Absolute or relative URL that accepts a JSON array of {@link OutboundEvent}. */
@@ -268,6 +376,29 @@ export type SyncUrlConfig = {
 /**
  * Mix-and-match sync wiring: supply handler functions, URL strings, or both.
  * Function handlers win over URLs when both are set for the same direction.
+ *
+ * @example Auth-aware fetch handlers
+ * ```ts
+ * import type { OutboundEvent, PullResponse, PushResponse } from "event-sourced-collection"
+ *
+ * async function pushEvents(events: ReadonlyArray<OutboundEvent>): Promise<PushResponse> {
+ *   const response = await fetch("/api/sync/events", {
+ *     method: "POST",
+ *     headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+ *     body: JSON.stringify(events),
+ *   })
+ *   return response.json() as Promise<PushResponse>
+ * }
+ *
+ * async function pullEvents({ since }: { since: number }): Promise<PullResponse> {
+ *   const response = await fetch(`/api/sync/events?since=${since}`, {
+ *     headers: { Authorization: `Bearer ${getToken()}` },
+ *   })
+ *   return response.json() as Promise<PullResponse>
+ * }
+ *
+ * const sync = { pushEvents, pullEvents }
+ * ```
  */
 export type SyncHandlersConfig = {
   /** Custom push implementation. Takes precedence over `pushUrl`. */
@@ -300,6 +431,24 @@ export type CollectionIndexDef<TState = object, _TKey extends string | number = 
   indexType?: CollectionIndexConstructor;
 };
 
+/**
+ * One user collection in the registry passed to a DB factory.
+ *
+ * @example
+ * ```ts
+ * import type { CollectionDef } from "event-sourced-collection"
+ * import { BasicIndex } from "@tanstack/db"
+ *
+ * type Todo = { id: string; userId: string; title: string }
+ *
+ * const todos: CollectionDef<Todo, string> = {
+ *   getKey: (todo) => todo.id,
+ *   indexes: [
+ *     { select: (todo) => todo.userId, name: "by-user", indexType: BasicIndex },
+ *   ],
+ * }
+ * ```
+ */
 export type CollectionDef<TState = object, TKey extends string | number = string> = {
   /** Stable primary key for each row. Used on the wire as the event `key`. */
   getKey: (state: TState) => TKey;
@@ -395,6 +544,21 @@ export type UpcastableEvent = {
 /**
  * Migrates an event authored under an older schema version into the current
  * shape. Return `null` to record the event as skipped instead of applying it.
+ *
+ * @example
+ * ```ts
+ * import type { UpcastEventFn } from "event-sourced-collection"
+ *
+ * const upcastEvent: UpcastEventFn = (event) => {
+ *   if (event.collectionId !== "todos") return event
+ *   if (event.schemaVersion >= 2) return event
+ *   return {
+ *     ...event,
+ *     schemaVersion: 2,
+ *     payload: { ...event.payload, status: event.payload.done ? "complete" : "pending" },
+ *   }
+ * }
+ * ```
  */
 export type UpcastEventFn = (event: UpcastableEvent) => UpcastableEvent | null;
 
@@ -420,6 +584,16 @@ export type SyncPhase = "push" | "pull" | "replay";
  * Observation points around the event lifecycle. Every hook is optional and
  * fire-and-forget: a hook that throws is logged and swallowed so it can never
  * break a sync. Do not mutate the values you are handed.
+ *
+ * @example Toast on sync failure and dead letters
+ * ```ts
+ * import type { EventSourcedHooks } from "event-sourced-collection"
+ *
+ * const hooks: EventSourcedHooks = {
+ *   onSyncError: ({ phase, error }) => console.error(`sync ${phase}`, error),
+ *   onDeadLetter: (entry) => console.warn("dead letter", entry.eventId, entry.message),
+ * }
+ * ```
  */
 export type EventSourcedHooks = {
   /** Fired once after collections are preloaded and startup replay has run. */
@@ -593,6 +767,8 @@ export type EventSourcedOptions<TDefs extends Record<string, CollectionDefConstr
  * Full configuration for `createEventSourcedDB`. Platform helpers accept
  * {@link EventSourcedOptions} plus that platform's TanStack persistence modules
  * and supply `persistence` themselves.
+ *
+ * @example See {@link createEventSourcedDB} for a complete Node SQLite setup.
  */
 export type EventSourcedDBConfig<TDefs extends Record<string, CollectionDefConstraint>> =
   EventSourcedOptions<TDefs> & {
@@ -610,6 +786,27 @@ export type EventSourcedDBConfig<TDefs extends Record<string, CollectionDefConst
     persistedCollectionOptions: PersistedCollectionOptionsFn;
   };
 
+/**
+ * Live event-sourced database: user collections plus reserved sync collections,
+ * and the sync / dead-letter APIs.
+ *
+ * @example After `ensureDb()`
+ * ```ts
+ * import type { CollectionDef, EventSourcedDB } from "event-sourced-collection"
+ *
+ * type Todo = { id: string; title: string; done: boolean }
+ * type Defs = { todos: CollectionDef<Todo, string> }
+ *
+ * async function useDb(db: EventSourcedDB<Defs>) {
+ *   await db.collections.todos.insert({ id: "t1", title: "Hi", done: false }).isPersisted.promise
+ *   db.setSyncEnabled(true)
+ *   const result = await db.sync()
+ *   if (result.deadLettered > 0) await db.retryDeadLetter()
+ *   const stop = db.subscribeSyncStatus((status) => console.log(status.pendingCount))
+ *   stop()
+ * }
+ * ```
+ */
 export type EventSourcedDB<TDefs extends Record<string, CollectionDefConstraint>> = {
   collections: CollectionMap<TDefs> & ReservedCollections;
   sync: () => Promise<SyncResult>;

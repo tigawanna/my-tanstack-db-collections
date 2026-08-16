@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import Database from "better-sqlite3";
 
-import { createMockSyncBackend } from "../../mock-sync-backend";
-import type { EventSourcedDB, EventSourcedDBConfig } from "../../types";
+import { createMockSyncBackend } from "../../testing/mock-sync-backend";
+import type { EventSourcedDB, EventSourcedDBConfig } from "../../core/types";
 import {
   createRejectingCollectionFactory,
   makeTodo,

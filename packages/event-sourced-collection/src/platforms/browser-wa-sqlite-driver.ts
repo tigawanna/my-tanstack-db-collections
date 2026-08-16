@@ -1,4 +1,4 @@
-import type { SQLiteDriver } from "../types";
+import type { SQLiteDriver } from "../core/types";
 
 export type BrowserWASQLiteDatabase = {
   execute: <TRow = unknown>(

@@ -2,14 +2,14 @@ import {
   createEventSourcedDBHandle,
   resolveModules,
   type ModulesInput,
-} from "../create-event-sourced-db-handle";
+} from "../core/create-event-sourced-db-handle";
 import type {
   CreateCollectionFn,
   InjectedCreateCollection,
   InjectedModuleFn,
   PersistedCollectionOptionsFn,
-} from "../persisted-collection";
-import type { EventSourcedSharedOptions, PersistedCollectionPersistence } from "../types";
+} from "../core/persisted-collection";
+import type { EventSourcedSharedOptions, PersistedCollectionPersistence } from "../core/types";
 import { createReactNativePlatform } from "./react-native";
 
 type CollectionDefConstraint = {
@@ -42,12 +42,35 @@ export type ReactNativeEventSourcedDBConfig<TDefs extends Record<string, Collect
     modules: ModulesInput<ReactNativeEventSourcedModules>;
   };
 
-export type { EventSourcedDBHandle as ReactNativeEventSourcedDBHandle } from "../create-event-sourced-db-handle";
+export type { EventSourcedDBHandle as ReactNativeEventSourcedDBHandle } from "../core/create-event-sourced-db-handle";
 
 /**
  * React Native–flavoured event-sourced DB, returned as a lazy singleton.
  *
  * @param config - See {@link ReactNativeEventSourcedDBConfig} for every option.
+ *
+ * @example
+ * ```ts
+ * import { createReactNativeEventSourcedDB } from "event-sourced-collection/react-native"
+ *
+ * const { ensureDb, db } = createReactNativeEventSourcedDB({
+ *   collections: { todos: { getKey: (todo: { id: string }) => todo.id } },
+ *   modules: async () => {
+ *     const { createCollection } = await import("@tanstack/react-native-db")
+ *     const { createReactNativeSQLitePersistence, persistedCollectionOptions } =
+ *       await import("@tanstack/react-native-db-sqlite-persistence")
+ *     const { openDatabase } = await import("react-native-op-sqlite")
+ *     return {
+ *       createCollection,
+ *       createReactNativeSQLitePersistence,
+ *       persistedCollectionOptions,
+ *       database: openDatabase({ name: "app.sqlite" }),
+ *     }
+ *   },
+ * })
+ *
+ * await ensureDb()
+ * ```
  */
 export function createReactNativeEventSourcedDB<
   const TDefs extends Record<string, CollectionDefConstraint>,

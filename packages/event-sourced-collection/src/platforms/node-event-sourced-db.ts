@@ -2,14 +2,14 @@ import {
   createEventSourcedDBHandle,
   resolveModules,
   type ModulesInput,
-} from "../create-event-sourced-db-handle";
+} from "../core/create-event-sourced-db-handle";
 import type {
   CreateCollectionFn,
   InjectedCreateCollection,
   InjectedModuleFn,
   PersistedCollectionOptionsFn,
-} from "../persisted-collection";
-import type { EventSourcedSharedOptions, PersistedCollectionPersistence } from "../types";
+} from "../core/persisted-collection";
+import type { EventSourcedSharedOptions, PersistedCollectionPersistence } from "../core/types";
 import { createNodePlatform } from "./node";
 
 type CollectionDefConstraint = {
@@ -34,6 +34,40 @@ export type NodeEventSourcedDBConfig<TDefs extends Record<string, CollectionDefC
     modules: ModulesInput<NodeEventSourcedModules>;
   };
 
+/**
+ * Node-flavoured event-sourced DB: better-sqlite3 persistence, returned as a
+ * lazy singleton.
+ *
+ * @example
+ * ```ts
+ * import { createCollection } from "@tanstack/db"
+ * import {
+ *   createNodeSQLitePersistence,
+ *   persistedCollectionOptions,
+ * } from "@tanstack/node-db-sqlite-persistence"
+ * import Database from "better-sqlite3"
+ * import { createNodeEventSourcedDB } from "event-sourced-collection/node"
+ *
+ * type Todo = { id: string; title: string }
+ *
+ * const sqlite = new Database("app.sqlite")
+ * const { ensureDb, db, close } = createNodeEventSourcedDB({
+ *   collections: { todos: { getKey: (todo: Todo) => todo.id } },
+ *   sync: { push: "http://localhost:3000/api/sync/events", pull: "http://localhost:3000/api/sync/events" },
+ *   modules: {
+ *     database: sqlite,
+ *     createNodeSQLitePersistence,
+ *     createCollection,
+ *     persistedCollectionOptions,
+ *   },
+ * })
+ *
+ * await ensureDb()
+ * await db.collections.todos.insert({ id: "t1", title: "Hi" }).isPersisted.promise
+ * await db.sync()
+ * await close()
+ * ```
+ */
 export function createNodeEventSourcedDB<
   const TDefs extends Record<string, CollectionDefConstraint>,
 >(config: NodeEventSourcedDBConfig<TDefs>) {

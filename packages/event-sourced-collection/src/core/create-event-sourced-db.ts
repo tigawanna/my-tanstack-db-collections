@@ -13,13 +13,13 @@ import {
   ROWVERSIONS_ID,
   SYNCMETA_ID,
   SYNC_LOCK_PREFIX,
-} from "./internal/constants";
-import { createHookEmitter } from "./internal/hooks";
-import type { EmitHook } from "./internal/hooks";
-import { pullInbox } from "./internal/pull";
-import { pushOutbox, toOutboundEvent } from "./internal/push";
-import { readRowVersion, recordRowVersion, replayInbox } from "./internal/replay";
-import { createSerialQueue } from "./internal/serial-queue";
+} from "../internal/constants";
+import { createHookEmitter } from "../internal/hooks";
+import type { EmitHook } from "../internal/hooks";
+import { pullInbox } from "../internal/pull";
+import { pushOutbox, toOutboundEvent } from "../internal/push";
+import { readRowVersion, recordRowVersion, replayInbox } from "../internal/replay";
+import { createSerialQueue } from "../internal/serial-queue";
 import {
   ensureSyncMeta,
   readPullCursor,
@@ -27,14 +27,14 @@ import {
   resolveClientId,
   writePullCursor,
   writeSyncOutcome,
-} from "./internal/sync-meta";
+} from "../internal/sync-meta";
 import type {
   AcceptMutationsCollection,
   MetaCollections,
   MutationHookParams,
   ReplayContext,
   ResolvedRetryConfig,
-} from "./internal/types";
+} from "../internal/types";
 import { createSyncTransport, normalizePushResponse } from "./sync";
 import type {
   CollectionMap,
@@ -54,9 +54,9 @@ import type {
   SyncStatus,
   SyncTrigger,
 } from "./types";
-import type { EventSourcedLogger } from "./utils/logger";
-import { createEventSourcedLogger } from "./utils/logger";
-import { generateEventId } from "./utils/uuid";
+import type { EventSourcedLogger } from "../utils/logger";
+import { createEventSourcedLogger } from "../utils/logger";
+import { generateEventId } from "../utils/uuid";
 
 type CollectionDefConstraint = {
   getKey: (state: never) => string | number;
@@ -108,11 +108,41 @@ function emptyResult(overrides: Partial<SyncResult> = {}): SyncResult {
 
 /**
  * Low-level factory: wires persistence, collections, outbox/inbox, and sync.
- * Prefer `createEventSourcedDBHandle` or a platform helper
- * (`createBrowserEventSourcedDB`, `createNodeEventSourcedDB`,
- * `createReactNativeEventSourcedDB`) unless you are supplying your own persistence.
+ * Prefer a platform helper (`createBrowserEventSourcedDB`,
+ * `createNodeEventSourcedDB`, `createReactNativeEventSourcedDB`) unless you are
+ * supplying your own persistence.
  *
  * @param config - See {@link EventSourcedDBConfig} for every option.
+ *
+ * @example Node SQLite, opened immediately
+ * ```ts
+ * import { createCollection } from "@tanstack/db"
+ * import {
+ *   createNodeSQLitePersistence,
+ *   persistedCollectionOptions,
+ * } from "@tanstack/node-db-sqlite-persistence"
+ * import Database from "better-sqlite3"
+ * import { createEventSourcedDB } from "event-sourced-collection"
+ *
+ * type Todo = { id: string; title: string }
+ *
+ * const sqlite = new Database("app.sqlite")
+ * const db = await createEventSourcedDB({
+ *   persistence: createNodeSQLitePersistence({ database: sqlite }),
+ *   createCollection,
+ *   persistedCollectionOptions,
+ *   collections: {
+ *     todos: { getKey: (todo: Todo) => todo.id },
+ *   },
+ *   sync: {
+ *     push: "/api/sync/events",
+ *     pull: "/api/sync/events",
+ *   },
+ * })
+ *
+ * await db.collections.todos.insert({ id: "t1", title: "Ship" }).isPersisted.promise
+ * await db.sync()
+ * ```
  */
 export async function createEventSourcedDB<
   const TDefs extends Record<string, CollectionDefConstraint>,

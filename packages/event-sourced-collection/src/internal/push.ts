@@ -1,7 +1,7 @@
 import type { Collection } from "@tanstack/db";
 
-import type { NormalizedSyncTransport } from "../sync";
-import { normalizePushResponse } from "../sync";
+import type { NormalizedSyncTransport } from "../core/sync";
+import { normalizePushResponse } from "../core/sync";
 import type {
   DeadLetterEntry,
   DeadLetterReason,
@@ -9,7 +9,7 @@ import type {
   OutboxEntry,
   PushFailure,
   RowVersionEntry,
-} from "../types";
+} from "../core/types";
 import type { EventSourcedLogger } from "../utils/logger";
 import { CONFLICT_ERROR_CODE, DEFAULT_EVENT_SCHEMA_VERSION } from "./constants";
 import type { EmitHook } from "./hooks";

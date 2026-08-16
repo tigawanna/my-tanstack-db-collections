@@ -7,7 +7,7 @@ import type {
   PushResponse,
   ServerEvent,
   SyncTransport,
-} from "./types";
+} from "../core/types";
 
 export type MockRejection = {
   message: string;
@@ -57,6 +57,23 @@ export type MockSyncBackend = SyncTransport & {
 /**
  * In-memory sync backend for tests: assigns sequence numbers, deduplicates by
  * `eventId`, paginates, and can inject rejections and outages.
+ *
+ * @example
+ * ```ts
+ * import { createMockSyncBackend } from "event-sourced-collection"
+ * import { createNodeEventSourcedDB } from "event-sourced-collection/node"
+ *
+ * const backend = createMockSyncBackend({ backendId: "test" })
+ * const { ensureDb, db } = createNodeEventSourcedDB({
+ *   collections: { todos: { getKey: (todo: { id: string }) => todo.id } },
+ *   sync: backend,
+ *   modules: nodeSqliteModules,
+ * })
+ *
+ * await ensureDb()
+ * backend.seed({ collectionId: "todos", key: "t1", payload: { id: "t1", title: "Remote" } })
+ * await db.sync()
+ * ```
  */
 export function createMockSyncBackend(options: MockSyncBackendOptions = {}): MockSyncBackend {
   const events: ServerEvent[] = [];

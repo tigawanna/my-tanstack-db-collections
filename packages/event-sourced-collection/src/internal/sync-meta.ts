@@ -1,6 +1,6 @@
 import type { Collection } from "@tanstack/db";
 
-import type { InboxEntry, SyncMetaEntry } from "../types";
+import type { InboxEntry, SyncMetaEntry } from "../core/types";
 import { SYNCMETA_KEY } from "./constants";
 
 const EMPTY: SyncMetaEntry = {

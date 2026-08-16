@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import { describe, expect, it } from "vitest";
 
-import { createMockSyncBackend } from "../../mock-sync-backend";
+import { createMockSyncBackend } from "../../testing/mock-sync-backend";
 import { createNodeTodoHandle, makeTodo, openTempSqlite, todoRows } from "../helpers/node-db";
 
 describe("node event-sourced collection (sqlite)", () => {

@@ -21,7 +21,7 @@ export type BrowserPlatformConfig = {
 };
 
 export type BrowserPlatformResult = {
-  driver: import("../types").SQLiteDriver;
+  driver: import("../core/types").SQLiteDriver;
   persistence: PersistedCollectionPersistence;
   close: () => Promise<void>;
 };

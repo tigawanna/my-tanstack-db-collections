@@ -9,7 +9,7 @@ import type {
   SyncMetaEntry,
   UnknownEventHandling,
   UpcastEventFn,
-} from "../types";
+} from "../core/types";
 import type { EventSourcedLogger } from "../utils/logger";
 import type { EmitHook } from "./hooks";
 

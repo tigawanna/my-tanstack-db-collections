@@ -17,6 +17,33 @@ export type NormalizedSyncTransport = {
 
 type HeaderConfig = SyncHandlersConfig["headers"];
 
+/**
+ * Builds a {@link SyncTransport} that POSTs outbound events and GETs
+ * `pull?since=N`. Pass this as `sync` when you already have REST endpoints.
+ *
+ * @example
+ * ```ts
+ * import { createHttpTransport } from "event-sourced-collection"
+ * import { createBrowserEventSourcedDB } from "event-sourced-collection/browser"
+ *
+ * const sync = createHttpTransport({
+ *   push: "/api/sync/events",
+ *   pull: "/api/sync/events",
+ *   headers: () => ({ Authorization: `Bearer ${localStorage.getItem("token") ?? ""}` }),
+ * })
+ *
+ * const { ensureDb } = createBrowserEventSourcedDB({
+ *   databaseName: "app.sqlite",
+ *   collections: { todos: { getKey: (todo: { id: string }) => todo.id } },
+ *   sync,
+ *   modules: async () => {
+ *     const { createCollection } = await import("@tanstack/db")
+ *     const persistence = await import("@tanstack/browser-db-sqlite-persistence")
+ *     return { createCollection, ...persistence }
+ *   },
+ * })
+ * ```
+ */
 export function createHttpTransport(config: SyncUrlConfig): SyncTransport {
   return {
     push: createHttpPushEvents(config.push, config.headers),
@@ -160,6 +187,7 @@ function getPullUrl(config: SyncHandlersConfig | SyncUrlConfig): string | undefi
   return undefined;
 }
 
+/** Thrown when the HTTP push endpoint returns a non-OK status. */
 export class SyncPushError extends Error {
   constructor(
     public readonly status: number,
@@ -170,6 +198,7 @@ export class SyncPushError extends Error {
   }
 }
 
+/** Thrown when the HTTP pull endpoint returns a non-OK status. */
 export class SyncPullError extends Error {
   constructor(
     public readonly status: number,

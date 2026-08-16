@@ -9,15 +9,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach } from "vitest";
 
-import { createEventSourcedDB } from "../../create-event-sourced-db";
+import { createEventSourcedDB } from "../../core/create-event-sourced-db";
 import { createNodeEventSourcedDB } from "../../node";
-import type { CreateCollectionFn } from "../../persisted-collection";
+import type { CreateCollectionFn } from "../../core/persisted-collection";
 import type {
   EventSourcedDB,
   EventSourcedDBConfig,
   EventSourcedSharedOptions,
   SyncTransport,
-} from "../../types";
+} from "../../core/types";
 
 export type Todo = {
   id: string;

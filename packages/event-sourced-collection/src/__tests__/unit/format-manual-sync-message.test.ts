@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { formatManualSyncMessage } from "../../react/format-manual-sync-message";
-import type { ManualSyncResult } from "../../types";
+import type { ManualSyncResult } from "../../core/types";
 
 function result(overrides: Partial<ManualSyncResult> = {}): ManualSyncResult {
   return {

@@ -1,21 +1,21 @@
-export { createEventSourcedDB } from "./create-event-sourced-db";
-export { createEventSourcedDBHandle, resolveModules } from "./create-event-sourced-db-handle";
+export { createEventSourcedDB } from "./core/create-event-sourced-db";
+export { createEventSourcedDBHandle, resolveModules } from "./core/create-event-sourced-db-handle";
 export type {
   EventSourcedDBHandle,
   EventSourcedDBHandleSetup,
   ModulesInput,
-} from "./create-event-sourced-db-handle";
-export { createLazySingleton } from "./lazy-singleton";
-export type { LazySingleton, LazySingletonOptions } from "./lazy-singleton";
-export { createHttpTransport, SyncPushError, SyncPullError } from "./sync";
+} from "./core/create-event-sourced-db-handle";
+export { createLazySingleton } from "./core/lazy-singleton";
+export type { LazySingleton, LazySingletonOptions } from "./core/lazy-singleton";
+export { createHttpTransport, SyncPushError, SyncPullError } from "./core/sync";
 export { BackendMismatchError } from "./internal/pull";
-export { createMockSyncBackend } from "./mock-sync-backend";
+export { createMockSyncBackend } from "./testing/mock-sync-backend";
 export type {
   MockRejectFn,
   MockRejection,
   MockSyncBackend,
   MockSyncBackendOptions,
-} from "./mock-sync-backend";
+} from "./testing/mock-sync-backend";
 export { createWebLocksSyncLock, supportsWebLocks } from "./platforms/web-locks";
 export { generateEventId } from "./utils/uuid";
 export { createEventSourcedLogger } from "./utils/logger";
@@ -69,11 +69,11 @@ export type {
   UnknownEventHandling,
   UpcastableEvent,
   UpcastEventFn,
-} from "./types";
+} from "./core/types";
 
 export type {
   CreateCollectionFn,
   InjectedCreateCollection,
   InjectedModuleFn,
   PersistedCollectionOptionsFn,
-} from "./persisted-collection";
+} from "./core/persisted-collection";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createMockSyncBackend } from "../../mock-sync-backend";
-import type { EventSourcedDB } from "../../types";
+import { createMockSyncBackend } from "../../testing/mock-sync-backend";
+import type { EventSourcedDB } from "../../core/types";
 import { openTodoDb, type TodoDefs } from "../helpers/node-db";
 
 function createDb(

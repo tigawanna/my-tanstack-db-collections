@@ -1,4 +1,4 @@
-import type { ManualSyncResult } from "../types";
+import type { ManualSyncResult } from "../core/types";
 
 export function formatManualSyncMessage(result: ManualSyncResult): string {
   if (result.errors.length > 0) {

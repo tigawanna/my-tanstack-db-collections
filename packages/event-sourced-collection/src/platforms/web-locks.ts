@@ -1,4 +1,4 @@
-import type { SyncLock } from "../types";
+import type { SyncLock } from "../core/types";
 
 type LockManager = {
   request: (

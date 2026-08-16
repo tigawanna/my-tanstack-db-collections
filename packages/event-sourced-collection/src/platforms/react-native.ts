@@ -1,4 +1,4 @@
-import type { PersistedCollectionPersistence } from "../types";
+import type { PersistedCollectionPersistence } from "../core/types";
 
 export type ReactNativePlatformDeps = {
   createReactNativeSQLitePersistence: (options: {

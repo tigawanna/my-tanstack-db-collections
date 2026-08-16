@@ -1,6 +1,6 @@
 import type { Collection } from "@tanstack/db";
 
-import type { DeadLetterEntry, InboxEntry, RowVersionEntry, UpcastableEvent } from "../types";
+import type { DeadLetterEntry, InboxEntry, RowVersionEntry, UpcastableEvent } from "../core/types";
 import { DEFAULT_EVENT_SCHEMA_VERSION, RESERVED_IDS } from "./constants";
 import type { ReplayableEvent, ReplayContext, ReplayOutcome } from "./types";
 

@@ -1,13 +1,13 @@
 import type { Collection } from "@tanstack/db";
 
-import type { NormalizedSyncTransport } from "../sync";
+import type { NormalizedSyncTransport } from "../core/sync";
 import type {
   BackendMismatchPolicy,
   InboxEntry,
   OutboxEntry,
   ServerEvent,
   SyncMetaEntry,
-} from "../types";
+} from "../core/types";
 import { DEFAULT_EVENT_SCHEMA_VERSION } from "./constants";
 import { handleReplayFailure, replayEvent, resolveInboxEntry } from "./replay";
 import { readBackendId, readPullCursor, writeBackendId, writePullCursor } from "./sync-meta";

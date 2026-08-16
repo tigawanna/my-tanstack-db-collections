@@ -17,7 +17,7 @@ import type {
   SyncLock,
   UnknownEventHandling,
   UpcastEventFn,
-} from "../../types";
+} from "../../core/types";
 import {
   makeTodo,
   openEventSourcedDb,
@@ -26,7 +26,7 @@ import {
   openTodoDbOnSqlite,
   type TodoDefs,
 } from "../helpers/node-db";
-import type { CreateCollectionFn } from "../../persisted-collection";
+import type { CreateCollectionFn } from "../../core/persisted-collection";
 
 type TestTransport = {
   push: (events: ReadonlyArray<OutboundEvent>) => Promise<PushResponse>;

@@ -1,4 +1,4 @@
-import type { EventSourcedHooks } from "../types";
+import type { EventSourcedHooks } from "../core/types";
 import type { EventSourcedLogger } from "../utils/logger";
 
 /**

@@ -2,14 +2,14 @@ import {
   createEventSourcedDBHandle,
   resolveModules,
   type ModulesInput,
-} from "../create-event-sourced-db-handle";
+} from "../core/create-event-sourced-db-handle";
 import type {
   CreateCollectionFn,
   InjectedCreateCollection,
   InjectedModuleFn,
   PersistedCollectionOptionsFn,
-} from "../persisted-collection";
-import type { EventSourcedSharedOptions, SyncLock } from "../types";
+} from "../core/persisted-collection";
+import type { EventSourcedSharedOptions, SyncLock } from "../core/types";
 import { createBrowserPlatform } from "./browser";
 import type { BrowserPlatformDeps } from "./browser-types";
 import { createWebLocksSyncLock } from "./web-locks";
@@ -59,13 +59,49 @@ export type BrowserEventSourcedDBConfig<TDefs extends Record<string, CollectionD
     lock?: SyncLock | null;
   };
 
-export type { EventSourcedDBHandle as BrowserEventSourcedDBHandle } from "../create-event-sourced-db-handle";
+export type { EventSourcedDBHandle as BrowserEventSourcedDBHandle } from "../core/create-event-sourced-db-handle";
 
 /**
  * Browser-flavoured event-sourced DB: OPFS SQLite + optional Web Locks sync
  * election, returned as a lazy singleton.
  *
  * @param config - See {@link BrowserEventSourcedDBConfig} for every option.
+ *
+ * @example
+ * ```ts
+ * import { createBrowserEventSourcedDB } from "event-sourced-collection/browser"
+ * import type { CollectionDef, EventSourcedDB } from "event-sourced-collection"
+ *
+ * type Todo = { id: string; title: string }
+ * type Defs = { todos: CollectionDef<Todo, string> }
+ *
+ * const { ensureDb, db } = createBrowserEventSourcedDB<Defs>({
+ *   databaseName: "app.sqlite",
+ *   collections: { todos: { getKey: (todo) => todo.id } },
+ *   sync: { push: "/api/sync/events", pull: "/api/sync/events" },
+ *   modules: async () => {
+ *     const { createCollection } = await import("@tanstack/db")
+ *     const {
+ *       BrowserCollectionCoordinator,
+ *       createBrowserWASQLitePersistence,
+ *       openBrowserWASQLiteOPFSDatabase,
+ *       persistedCollectionOptions,
+ *     } = await import("@tanstack/browser-db-sqlite-persistence")
+ *     return {
+ *       createCollection,
+ *       BrowserCollectionCoordinator,
+ *       createBrowserWASQLitePersistence,
+ *       openBrowserWASQLiteOPFSDatabase,
+ *       persistedCollectionOptions,
+ *     }
+ *   },
+ * })
+ *
+ * export async function start() {
+ *   await ensureDb()
+ * }
+ * export { db }
+ * ```
  */
 export function createBrowserEventSourcedDB<
   const TDefs extends Record<string, CollectionDefConstraint>,
