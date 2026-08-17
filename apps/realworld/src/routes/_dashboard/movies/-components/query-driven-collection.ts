@@ -113,46 +113,47 @@ const persistence = createBrowserWASQLitePersistence({
   database,
 });
 
+const watchlistQueryOptions = queryCollectionOptions({
+  queryKey: [WATCHLIST_COLLECTION_QUERY_KEY],
+  queryFn: async () => getFakeWatchlistFn(),
+  queryClient: getQueryClient(),
+  schema: fakeWatchlistSchema,
+  getKey: (item) => item.id,
+  autoIndex: "eager",
+  defaultIndexType: BasicIndex,
+  staleTime: 1000 * 60 * 60,
+  onInsert: async ({ transaction }) => {
+    await Promise.all(
+      transaction.mutations.map((mutation) =>
+        addFakeWatchlistFn({
+          data: {
+            id: mutation.modified.id,
+            movieId: mutation.modified.movieId,
+            createdAt: mutation.modified.createdAt,
+            title: mutation.modified.title,
+            poster_path: mutation.modified.poster_path,
+            overview: mutation.modified.overview,
+            vote_average: mutation.modified.vote_average,
+            release_date: mutation.modified.release_date,
+          } satisfies FakeWatchlistItem,
+        }),
+      ),
+    );
+  },
+  onDelete: async ({ transaction }) => {
+    await Promise.all(
+      transaction.mutations.map((mutation) =>
+        removeFakeWatchlistFn({ data: { id: String(mutation.key) } }),
+      ),
+    );
+  },
+});
+
 export const queryDrivenWatchlistCollection = createCollection({
   ...persistedCollectionOptions({
     persistence,
     schemaVersion: 2,
-    ...queryCollectionOptions({
-      queryKey: [WATCHLIST_COLLECTION_QUERY_KEY],
-      queryFn: async () => getFakeWatchlistFn(),
-      queryClient: getQueryClient(),
-      schema: fakeWatchlistSchema,
-      getKey: (item) => item.id,
-      autoIndex: "eager",
-      defaultIndexType: BasicIndex,
-      staleTime: 1000 * 60 * 60,
-      onInsert: async ({ transaction }) => {
-        await Promise.all(
-          transaction.mutations.map((mutation) =>
-            addFakeWatchlistFn({
-              data: {
-                id: mutation.modified.id,
-                movieId: mutation.modified.movieId,
-                createdAt: mutation.modified.createdAt,
-                title: mutation.modified.title,
-                poster_path: mutation.modified.poster_path,
-                overview: mutation.modified.overview,
-                vote_average: mutation.modified.vote_average,
-                release_date: mutation.modified.release_date,
-              } satisfies FakeWatchlistItem,
-            }),
-          ),
-        );
-      },
-      onDelete: async ({ transaction }) => {
-        await Promise.all(
-          transaction.mutations.map((mutation) =>
-            removeFakeWatchlistFn({ data: { id: String(mutation.key) } }),
-          ),
-        );
-      },
-    }),
-  } as never),
-  // @ts-expect-error queryCollectionOptions + persistedCollectionOptions overload mismatch
+    ...watchlistQueryOptions,
+  }),
   schema: fakeWatchlistSchema,
 });

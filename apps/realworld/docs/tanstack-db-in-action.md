@@ -1,12 +1,14 @@
-# Tanstack DB in action
+# TanStack DB in Action
 
-The team at tansack, makers of tanstack query aka react-query partnered with the [ElectricSQL](https://electric.ax/) team to give us s ething truly awesome
+The team at TanStack, makers of TanStack Query (aka react-query), partnered with the [ElectricSQL](https://electric.ax/) team to give us something truly awesome.
 
-This library excites me for 2 reasons
+This library excites me for two reasons:
+
+## Why it excites me
 
 ### Joining data from multiple sources
 
-Anything you can express as a collection can be joined to another collection with sql like semantics and te library auotmtically jandles mitigating against N+ 1 querues
+Anything you can express as a collection can be joined to another collection with SQL-like semantics, and the library automatically handles mitigating against N+1 queries.
 
 ```ts
 // Left join - all users, even without posts
@@ -17,17 +19,19 @@ const allUsers = createLiveQueryCollection((q) =>
 );
 ```
 
-### Basic local first functionality
+### Basic local-first functionality
 
-The library shipped persistence in its latest version backed by sqlite with web and react native adapters enabling for some true local first approaches all of which s porvider and backend agnostic
+The library shipped persistence in its latest version, backed by SQLite with Web and React Native adapters, enabling true local-first approaches—all while remaining provider- and backend-agnostic.
 
-In my usage of the library I have discoverd a few cool apporaches that make lie with this llbrary better
+In my usage of the library, I have discovered a few cool approaches that make life with this library better.
 
-## The basics
+## The Basics
 
-Tanstack db comes with adapters for many local first providers but in our case we'll be using the tanstack query one since it lets us progresivelly enhance
+TanStack DB comes with adapters for many local-first providers, but in our case, we'll be using the TanStack Query adapter since it lets us progressively enhance.
 
-Let's take the example of a movie app
+### From `useQuery` to a collection
+
+Let's take the example of a movie app:
 
 ```tsx
 import { useQuery } from "@tanstack/react-query";
@@ -67,7 +71,7 @@ export function MovieListWithUseQuery() {
 }
 ```
 
-This is a nice starting point for us to port and we start by creating the collection definition
+This is a nice starting point for us to port. We start by creating the collection definition:
 
 ```ts
 export const moviesCollection = createCollection(
@@ -97,7 +101,9 @@ export const moviesCollection = createCollection(
 );
 ```
 
-And we can query our collection via a useLiveQueryHook
+### Querying with `useLiveQuery`
+
+And we can query our collection via a `useLiveQuery` hook:
 
 ```tsx
 import { useLiveQuery } from "@tanstack/react-db";
@@ -125,9 +131,9 @@ export function MovieList() {
 }
 ```
 
-For now this seems like a downgrade compared to the previous setup as it requires more boiler plate and if you've noticed we're not passing the filters to gte a new paginated subset.
+For now, this might seem like a downgrade compared to the previous setup as it requires more boilerplate, and if you've noticed, we're not passing the filters to get a new paginated subset.
 
-While tansack db can handle upto 50,000 rows no problem our backend team or third party APIs would never allow us to grab that many records at once and we'll explore solution to thta later but for now let's do something that the `useQuery` can't
+While TanStack DB can handle up to 50,000 rows with no problem, our backend team or third-party APIs would never allow us to fetch that many records at once. We'll explore solutions to that later, but for now, let's do something that `useQuery` can't.
 
 ```ts
 //  watchlist collection
@@ -165,7 +171,7 @@ export const watchlistCollection = createCollection(
 );
 ```
 
-> Join on another collection
+### Joining with another collection
 
 ```tsx
 import { eq, isUndefined, not, useLiveQuery } from "@tanstack/react-db";
@@ -208,20 +214,26 @@ export function MovieList() {
 }
 ```
 
-This is not impossible to accomplish in `useQuery` land but it is not as incrementally computed and it it certainly not as clean and the comparisons can take a back seat for now as we examine how to do partial data responses and how to hnadle non array responses becsue if you notice
+This is not impossible to accomplish in `useQuery` land, but it is not as incrementally computed and certainly not as clean. Comparisons can take a back seat for now as we examine how to do partial data responses and handle non-array responses.
+
+### Handling non-array responses
+
+As you might notice:
 
 ```ts
       const response = await getPaginatedFakeMoviesFn({
         data:filters
       });
-      return response; // this response is an object and checking the query devtools will show the whole payload but tansack db only allows you to return an array so we use the slect method below similar to the tansack query equivalent
+      return response; // this response is an object and checking the query devtools will show the whole payload, but TanStack DB only allows you to return an array, so we use the select method below similar to the TanStack Query equivalent
     },
     select: (data) => data.items, // only return the items array from the collection
 ```
 
-![The whole query payload is captired but we can only return the items array from the collection](./image/devtools-query-no-sync.png)
+![The whole query payload is captured, but we can only return the items array from the collection](./image/devtools-query-no-sync.png)
 
-This mean we cna grab the rest of the metadata from the query store and i made a handy helper for this
+### Reading pagination metadata from the query store
+
+This means we can grab the rest of the metadata from the query store. I made a handy helper for this:
 
 ```ts
 import { useQueryClient } from "@tanstack/react-query";
@@ -320,7 +332,9 @@ const { meta } = useTSDBQueryMeta(PAGINATED_MOVIES_COLLECTION_QUERY_KEY, {
 
 ## Pagination
 
-If your server does return the massive patload you can leverage the `useLiveInfinteQuery` hook to do cursor based pagination of the dataset that has already been fetched
+### Client-side infinite query
+
+If your server does return a massive payload, you can leverage the `useLiveInfiniteQuery` hook to perform cursor-based pagination on the dataset that has already been fetched:
 
 ```tsx
 import { useLiveInfiniteQuery } from "@tanstack/react-db";
@@ -370,9 +384,11 @@ export function ListMoviesInfinite() {
 }
 ```
 
-This works but it doenst give us ultimate control which is unoked via a feature released in `0.5` called [query-driven-sync](https://tanstack.com/blog/tanstack-db-0.5-query-driven-sync)
+### Query-driven sync
 
-To achive this we set the collection sync option to `on-deman`
+This works, but it doesn't give us ultimate control, which is unlocked via a feature released in `0.5` called [query-driven-sync](https://tanstack.com/blog/tanstack-db-0.5-query-driven-sync).
+
+To achieve this, we set the collection sync option to `on-demand`:
 
 > [!NOTE]
 > This will opt us out of the ability to preload a collection in the loaders [more info](https://tanstack.com/intent/registry/%2540tanstack%252Fdb/meta-framework#on-demand-query-collection-preload)
@@ -437,4 +453,117 @@ export const queryDrivenMoviesCollection = createCollection(
 );
 ```
 
-The query parsing helpers
+The query parsing helpers are [here](https://github.com/tigawanna/locally-first/blob/42acbb61aa125a825f921e3a48f7c935db643581/apps/realworld/src/lib/tanstack/db/query-context-parsers.ts)
+
+And just like that, we can now compose our queries, and the filters will be used to determine the next subset that gets loaded.
+
+## Persistence
+
+TanStack Query has some persistence options, but they're backed by IndexedDB and LocalStorage and have somewhat unreliable mutation persistence.
+
+With [version 0.6](https://tanstack.com/blog/tanstack-db-0.6-app-ready-with-persistence-and-includes), TanStack DB introduced persistence via SQLite. This closes the gap in making better offline-first applications with powerful and persisted optimistic mutations:
+
+```ts
+import { BasicIndex, createCollection, parseLoadSubsetOptions } from "@tanstack/db";
+import { queryCollectionOptions } from "@tanstack/query-db-collection";
+
+import {
+  createBrowserWASQLitePersistence,
+  openBrowserWASQLiteOPFSDatabase,
+  persistedCollectionOptions,
+} from "@tanstack/browser-db-sqlite-persistence";
+
+const database = await openBrowserWASQLiteOPFSDatabase({
+  databaseName: "my-app.sqlite",
+});
+
+const persistence = createBrowserWASQLitePersistence({
+  database,
+});
+
+const watchlistQueryOptions = queryCollectionOptions({
+  queryKey: [WATCHLIST_COLLECTION_QUERY_KEY],
+  queryFn: async () => getFakeWatchlistFn(),
+  queryClient: getQueryClient(),
+  schema: fakeWatchlistSchema,
+  getKey: (item) => item.id,
+  autoIndex: "eager",
+  defaultIndexType: BasicIndex,
+  staleTime: 1000 * 60 * 60,
+  onInsert: async ({ transaction }) => {
+    await Promise.all(
+      transaction.mutations.map((mutation) =>
+        addFakeWatchlistFn({
+          data: {
+            id: mutation.modified.id,
+            movieId: mutation.modified.movieId,
+            createdAt: mutation.modified.createdAt,
+            title: mutation.modified.title,
+            poster_path: mutation.modified.poster_path,
+            overview: mutation.modified.overview,
+            vote_average: mutation.modified.vote_average,
+            release_date: mutation.modified.release_date,
+          } satisfies FakeWatchlistItem,
+        }),
+      ),
+    );
+  },
+  onDelete: async ({ transaction }) => {
+    await Promise.all(
+      transaction.mutations.map((mutation) =>
+        removeFakeWatchlistFn({ data: { id: String(mutation.key) } }),
+      ),
+    );
+  },
+});
+
+export const queryDrivenWatchlistCollection = createCollection({
+  ...persistedCollectionOptions({
+    persistence,
+    schemaVersion: 2,
+    ...watchlistQueryOptions,
+  }),
+  schema: fakeWatchlistSchema,
+});
+```
+
+## Conclusions
+
+While good, this isn't a perfect system, and I would absolutely like a few features that would make this library even more awesome.
+
+### Wishlist
+
+#### A meta object from `useLiveQuery` into the collection
+
+I'll take the example of our API that returns paged data. We currently map all the subsets with a page so that we can filter on that page, despite every subset that we load ever being the same page for every row in a subset.
+
+```ts
+const current_page = // whatever was in the filters
+// take a sample subset
+const result = [{id: 1, name: "hello"}, {id: 2, name: "hello 2"}, {id: 3, name: "hello 3"}]
+// we have to map in the page item
+const pagedResult = results.map((item) => ({...item, page: current_page}))
+
+// we can now do this in our live query
+.where(({ movies }) => and(eq(movies.page, page), eq(movies.q, q)))
+// and access it in our collection
+    queryFn: async (ctx) => {
+      const where = parseWhereWithHandlers<MoviesWhereClause>(ctx.meta?.loadSubsetOptions?.where);
+      const { sorts } = parseLoadSubsetOptions(ctx.meta?.loadSubsetOptions);
+      const page = where?.page?._eq ?? 1; // we can finally extract this to pass into our new query for the subset
+```
+
+#### `placeholderData` and `isRefetching`
+
+An option like `placeholderData: keepPreviousData` from [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/guides/paginated-queries#better-paginated-queries-with-placeholderdata) in the collection and an `isRefetching` property to be returned from the query hooks.
+
+This would be especially helpful for TanStack Router/Start since they can't use `useTransition` to stop every filter change from transitioning the page into `isLoading` and instead show the last data the user was looking at when using query-driven sync.
+
+I really love this library and have even built more abstractions ([event-sourced-collection](https://www.npmjs.com/package/event-sourced-collection)) over it to take local-first development even further.
+
+## References
+
+- [Example TanStack Start app with TanStack DB](https://github.com/tigawanna/locally-first/tree/main/apps/example)
+- [event-sourced-collection](https://www.npmjs.com/package/event-sourced-collection) — event-sourcing based local-first layer on TanStack DB
+- [TanStack DB skills](https://tanstack.com/intent/registry/%2540tanstack%252Fdb)
+- [TanStack DB official blogs](https://tanstack.com/blog?library=db)
